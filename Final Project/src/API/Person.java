@@ -7,9 +7,16 @@ public class Person {
   private String id;
   private String name;
   private int age;
+  private int interestAge;
   private String sex;
   private String interest;
+  private String ethnicity;
+  private String interestEthnicity;
+  private String religion;
+  private String education;
+  private String relationshipGoal;
   private String coordinates;
+  private int rating;
 
   /**
    * Gets id.
@@ -70,6 +77,10 @@ public class Person {
     coords[0] = Double.parseDouble(stringCoordinates[0].trim()); // Trim whitespace and parse the latitude
     coords[1] = Double.parseDouble(stringCoordinates[1].trim()); // Trim whitespace and parse the longitude
     return coords;
+  }
+
+  public int getRating() {
+    return rating;
   }
 
   /**
