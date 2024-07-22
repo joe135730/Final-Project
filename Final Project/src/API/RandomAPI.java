@@ -14,12 +14,11 @@ import java.net.http.HttpResponse;
 import java.util.List;
 
 /**
- * The Random api call api from RandomAPI and transfer Json data into Java ArrayList
+ * The Random api class call api from RandomAPI and transfer Json data into Java ArrayList
  * URL: https://randomapi.com/
  * Cheyi Wu's key:
- *  api key: SPP1-8JT9-WDHY-RKW9
- *  ref key: atopjxhd
- *
+ * api key: SPP1-8JT9-WDHY-RKW9
+ * ref key: atopjxhd
  */
 public class RandomAPI {
   /**
@@ -52,7 +51,7 @@ public class RandomAPI {
     JsonArray jsonProfiles = jsonResponse.getAsJsonArray("results").get(0).getAsJsonObject().getAsJsonArray("profiles");
 
     // Type token
-    Type listType  = new TypeToken<List<Person>>(){}.getType();
+    Type listType = new TypeToken<List<Person>>() {}.getType();
     List<Person> profiles = gson.fromJson(jsonProfiles, listType);
 
     // Categorize profiles into male and female lists
@@ -64,7 +63,22 @@ public class RandomAPI {
     // Comment/ Uncomment to check list output
     System.out.println("Male Profiles:");
     for (Person male : PeopleManager.getMaleList()) {
-      System.out.println(STR."ID: \{male.getId()}\nName: \{male.getName()}\nAge: \{male.getAge()}\nSex: \{male.getSex()}\nInterest: \{male.getInterest()}\nCoordinates: x: \{male.getCoordinates()[0]}, y: \{male.getCoordinates()[1]}");
+//      System.out.println(STR."ID: \{male.getId()}\nName: \{male.getName()}\nAge: \{male.getAge()}\nInterestAge: \{male.getInterestAge()}\nSex: \{male.getSex()}\nInterest: \{male.getInterest()}\nCoordinates: x: \{male.getCoordinates()[0]}, y: \{male.getCoordinates()[1]}");
+      System.out.println("ID: " + male.getId() + "\n" +
+              "Name: " + male.getName() + "\n" +
+              "Age: " + male.getAge() + "\n" +
+              "InterestAge: " + male.getInterestAge() + "\n" +
+              "Sex: " + male.getSex() + "\n" +
+              "Interest: " + male.getInterest() + "\n" +
+              "Ethnicity: " + male.getEthnicity() + "\n" +
+              "Interest Ethnicity: " + male.getInterestEthnicity() + "\n" +
+              "Religion: " + male.getReligion() + "\n" +
+              "Education: " + male.getEducation() + "\n" +
+              "Interest Education: " + male.getInterestEducation() + "\n" +
+              "Relationship Goal: " + male.getRelationshipGoal() + "\n" +
+              "Coordinates: x: " + male.getCoordinates()[0] +
+              ", y: " + male.getCoordinates()[1]
+      );
       System.out.println();
     }
 
@@ -72,7 +86,23 @@ public class RandomAPI {
     // Comment/ Uncomment to check list output
     System.out.println("Female Profiles:");
     for (Person female : PeopleManager.getFemaleList()) {
-      System.out.println(STR."ID: \{female.getId()}\nName: \{female.getName()}\nAge: \{female.getAge()}\nSex: \{female.getSex()}\nInterest: \{female.getInterest()}\nCoordinates: x: \{female.getCoordinates()[0]}, y: \{female.getCoordinates()[1]}");
+//      System.out.println(STR."ID: \{female.getId()}\nName: \{female.getName()}\nAge: \{female.getAge()}\nSex: \{female.getSex()}\nInterest: \{female.getInterest()}\nCoordinates: x: \{female.getCoordinates()[0]}, y: \{female.getCoordinates()[1]}");
+      System.out.println(
+              "ID: " + female.getId() + "\n" +
+                      "Name: " + female.getName() + "\n" +
+                      "Age: " + female.getAge() + "\n" +
+                      "InterestAge: " + female.getInterestAge() + "\n" +
+                      "Sex: " + female.getSex() + "\n" +
+                      "Interest: " + female.getInterest() + "\n" +
+                      "Ethnicity: " + female.getEthnicity() + "\n" +
+                      "Interest Ethnicity: " + female.getInterestEthnicity() + "\n" +
+                      "Religion: " + female.getReligion() + "\n" +
+                      "Education: " + female.getEducation() + "\n" +
+                      "Interest Education: " + female.getInterestEducation() + "\n" +
+                      "Relationship Goal: " + female.getRelationshipGoal() + "\n" +
+                      "Coordinates: x: " + female.getCoordinates()[0] +
+                      ", y: " + female.getCoordinates()[1]
+      );
       System.out.println();
     }
 

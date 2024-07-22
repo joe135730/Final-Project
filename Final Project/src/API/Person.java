@@ -14,6 +14,7 @@ public class Person {
   private String interestEthnicity;
   private String religion;
   private String education;
+  private String interestEducation;
   private String relationshipGoal;
   private String coordinates;
   private int rating;
@@ -55,6 +56,10 @@ public class Person {
     return age;
   }
 
+  public int getInterestAge() {
+    return interestAge;
+  }
+
   /**
    * Gets interest.
    *
@@ -62,6 +67,30 @@ public class Person {
    */
   public String getInterest() {
     return interest;
+  }
+
+  public String getEthnicity() {
+    return ethnicity;
+  }
+
+  public String getInterestEthnicity() {
+    return interestEthnicity;
+  }
+
+  public String getReligion() {
+    return religion;
+  }
+
+  public String getEducation() {
+    return education;
+  }
+
+  public String getInterestEducation() {
+    return interestEducation;
+  }
+
+  public String getRelationshipGoal() {
+    return relationshipGoal;
   }
 
   /**
@@ -83,12 +112,13 @@ public class Person {
     return rating;
   }
 
+
+  // Add setters if necessary for Gson to work properly
   /**
    * Sets id.
    *
    * @param id the id
    */
-// Add setters if necessary for Gson to work properly
   public void setId(String id) {
     this.id = id;
   }
@@ -111,6 +141,10 @@ public class Person {
     this.age = age;
   }
 
+  public void setInterestAge(int interestAge) {
+    this.interestAge = interestAge;
+  }
+
   /**
    * Sets sex.
    *
@@ -129,6 +163,30 @@ public class Person {
     this.interest = interest;
   }
 
+  public void setEthnicity(String ethnicity) {
+    this.ethnicity = ethnicity;
+  }
+
+  public void setInterestEthnicity(String interestEthnicity) {
+    this.interestEthnicity = interestEthnicity;
+  }
+
+  public void setReligion(String religion) {
+    this.religion = religion;
+  }
+
+  public void setEducation(String education) {
+    this.education = education;
+  }
+
+  public void setInterestEducation(String interestEducation) {
+    this.interestEducation = interestEducation;
+  }
+
+  public void setRelationshipGoal(String relationshipGoal) {
+    this.relationshipGoal = relationshipGoal;
+  }
+
   /**
    * Sets coordinates.
    *
@@ -138,5 +196,7 @@ public class Person {
     this.coordinates = coordinates;
   }
 
-  // Add abcdefg
+  public void setRating(int rating) {
+    this.rating = rating;
+  }
 }
