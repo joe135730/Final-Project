@@ -13,6 +13,9 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
 
+import People.PeopleManager;
+import People.Person;
+
 /**
  * The Random api class call api from RandomAPI and transfer Json data into Java ArrayList
  * URL: https://randomapi.com/
@@ -27,7 +30,7 @@ public class RandomAPI {
    * @throws IOException          the io exception
    * @throws InterruptedException the interrupted exception
    */
-  public static void callAPI() throws IOException, InterruptedException {
+  public static void callAPI(PeopleManager pm) throws IOException, InterruptedException {
     // API String (Change this by creating an account, else the usage will be used up quickly.)
     String API = "https://randomapi.com/api/?key=SPP1-8JT9-WDHY-RKW9&ref=atopjxhd&results=1&fmt=pretty&noinfo";
     // Create a HttpClient
@@ -56,55 +59,53 @@ public class RandomAPI {
 
     // Categorize profiles into male and female lists
     for (Person profile : profiles) {
-      PeopleManager.addPerson(profile);
+      pm.addPerson(profile);
     }
 
     // Male Profiles
     // Comment/ Uncomment to check list output
-    System.out.println("Male Profiles:");
-    for (Person male : PeopleManager.getMaleList()) {
-//      System.out.println(STR."ID: \{male.getId()}\nName: \{male.getName()}\nAge: \{male.getAge()}\nInterestAge: \{male.getInterestAge()}\nSex: \{male.getSex()}\nInterest: \{male.getInterest()}\nCoordinates: x: \{male.getCoordinates()[0]}, y: \{male.getCoordinates()[1]}");
-      System.out.println("ID: " + male.getId() + "\n" +
-              "Name: " + male.getName() + "\n" +
-              "Age: " + male.getAge() + "\n" +
-              "InterestAge: " + male.getInterestAge() + "\n" +
-              "Sex: " + male.getSex() + "\n" +
-              "Interest: " + male.getInterest() + "\n" +
-              "Ethnicity: " + male.getEthnicity() + "\n" +
-              "Interest Ethnicity: " + male.getInterestEthnicity() + "\n" +
-              "Religion: " + male.getReligion() + "\n" +
-              "Education: " + male.getEducation() + "\n" +
-              "Interest Education: " + male.getInterestEducation() + "\n" +
-              "Relationship Goal: " + male.getRelationshipGoal() + "\n" +
-              "Coordinates: x: " + male.getCoordinates()[0] +
-              ", y: " + male.getCoordinates()[1]
-      );
-      System.out.println();
-    }
+//    System.out.println("Male Profiles:");
+//    for (Person male : pm.getMaleList()) {
+//      System.out.println("ID: " + male.getId() + "\n" +
+//              "Name: " + male.getName() + "\n" +
+//              "Age: " + male.getAge() + "\n" +
+//              "InterestAge: Min: " + male.getInterestAge()[0] + ", Max: " + male.getInterestAge()[1] +"\n" +
+//              "Sex: " + male.getSex() + "\n" +
+//              "Interest: " + male.getInterest() + "\n" +
+//              "Ethnicity: " + male.getEthnicity() + "\n" +
+//              "Interest Ethnicity: " + male.getInterestEthnicity() + "\n" +
+//              "Religion: " + male.getReligion() + "\n" +
+//              "Education: " + male.getEducation() + "\n" +
+//              "Interest Education: " + male.getInterestEducation() + "\n" +
+//              "Relationship Goal: " + male.getRelationshipGoal() + "\n" +
+//              "Coordinates: x: " + male.getCoordinates()[0] +
+//              ", y: " + male.getCoordinates()[1]
+//      );
+//      System.out.println();
+//    }
 
     // Female Profiles
     // Comment/ Uncomment to check list output
-    System.out.println("Female Profiles:");
-    for (Person female : PeopleManager.getFemaleList()) {
-//      System.out.println(STR."ID: \{female.getId()}\nName: \{female.getName()}\nAge: \{female.getAge()}\nSex: \{female.getSex()}\nInterest: \{female.getInterest()}\nCoordinates: x: \{female.getCoordinates()[0]}, y: \{female.getCoordinates()[1]}");
-      System.out.println(
-              "ID: " + female.getId() + "\n" +
-                      "Name: " + female.getName() + "\n" +
-                      "Age: " + female.getAge() + "\n" +
-                      "InterestAge: " + female.getInterestAge() + "\n" +
-                      "Sex: " + female.getSex() + "\n" +
-                      "Interest: " + female.getInterest() + "\n" +
-                      "Ethnicity: " + female.getEthnicity() + "\n" +
-                      "Interest Ethnicity: " + female.getInterestEthnicity() + "\n" +
-                      "Religion: " + female.getReligion() + "\n" +
-                      "Education: " + female.getEducation() + "\n" +
-                      "Interest Education: " + female.getInterestEducation() + "\n" +
-                      "Relationship Goal: " + female.getRelationshipGoal() + "\n" +
-                      "Coordinates: x: " + female.getCoordinates()[0] +
-                      ", y: " + female.getCoordinates()[1]
-      );
-      System.out.println();
-    }
+//    System.out.println("Female Profiles:");
+//    for (Person female : pm.getFemaleList()) {
+//      System.out.println(
+//              "ID: " + female.getId() + "\n" +
+//                      "Name: " + female.getName() + "\n" +
+//                      "Age: " + female.getAge() + "\n" +
+//                      "InterestAge: Min:" + female.getInterestAge()[0] + ", Max: " + female.getInterestAge()[1] + "\n" +
+//                      "Sex: " + female.getSex() + "\n" +
+//                      "Interest: " + female.getInterest() + "\n" +
+//                      "Ethnicity: " + female.getEthnicity() + "\n" +
+//                      "Interest Ethnicity: " + female.getInterestEthnicity() + "\n" +
+//                      "Religion: " + female.getReligion() + "\n" +
+//                      "Education: " + female.getEducation() + "\n" +
+//                      "Interest Education: " + female.getInterestEducation() + "\n" +
+//                      "Relationship Goal: " + female.getRelationshipGoal() + "\n" +
+//                      "Coordinates: x: " + female.getCoordinates()[0] +
+//                      ", y: " + female.getCoordinates()[1]
+//      );
+//      System.out.println();
+//    }
 
   }
 }

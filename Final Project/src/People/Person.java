@@ -1,4 +1,7 @@
-package API;
+package People;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The person class stores each person data.
@@ -7,7 +10,7 @@ public class Person {
   private String id;
   private String name;
   private int age;
-  private int interestAge;
+  private int[] interestAge; // Index 0: Min, Index 1: Max
   private String sex;
   private String interest;
   private String ethnicity;
@@ -18,6 +21,7 @@ public class Person {
   private String relationshipGoal;
   private String coordinates;
   private int rating;
+  private List<Person> potentialCandidates = new ArrayList<>();
 
   /**
    * Gets id.
@@ -56,7 +60,7 @@ public class Person {
     return age;
   }
 
-  public int getInterestAge() {
+  public int[] getInterestAge() {
     return interestAge;
   }
 
@@ -112,8 +116,11 @@ public class Person {
     return rating;
   }
 
+  public List<Person> getPotentialCandidates() {
+    return potentialCandidates;
+  }
 
-  // Add setters if necessary for Gson to work properly
+// Add setters if necessary for Gson to work properly
   /**
    * Sets id.
    *
@@ -141,7 +148,7 @@ public class Person {
     this.age = age;
   }
 
-  public void setInterestAge(int interestAge) {
+  public void setInterestAge(int[] interestAge) {
     this.interestAge = interestAge;
   }
 
@@ -198,5 +205,9 @@ public class Person {
 
   public void setRating(int rating) {
     this.rating = rating;
+  }
+
+  public void setPotentialCandidates(List<Person> potentialCandidates) {
+    this.potentialCandidates = potentialCandidates;
   }
 }
