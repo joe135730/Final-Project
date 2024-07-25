@@ -17,7 +17,6 @@ public class Algorithm {
     // Instantiate Graph for graph algorithm by adding male and female list in one.
     Graph g = new Graph(pm);
 
-
     boolean isEmptyPreferList = false; // track to see if person has empty potential list
     // Male Profiles
     // Comment/ Uncomment to check list output
