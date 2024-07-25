@@ -21,6 +21,7 @@ public class Person {
   private String relationshipGoal;
   private String coordinates;
   private int rating;
+  private List<Person> preferCandidates = new ArrayList<>();
   private List<Person> potentialCandidates = new ArrayList<>();
 
   /**
@@ -116,6 +117,10 @@ public class Person {
     return rating;
   }
 
+  public List<Person> getPreferCandidates() {
+    return preferCandidates;
+  }
+
   public List<Person> getPotentialCandidates() {
     return potentialCandidates;
   }
@@ -205,6 +210,10 @@ public class Person {
 
   public void setRating(int rating) {
     this.rating = rating;
+  }
+
+  public void setPreferCandidates(List<Person> preferCandidates) {
+    this.preferCandidates = preferCandidates;
   }
 
   public void setPotentialCandidates(List<Person> potentialCandidates) {

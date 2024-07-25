@@ -8,7 +8,7 @@ import People.Person;
 
 public class Filter implements IFilter{
   @Override
-  public void addPotentialCandidatesMale(List<Person> males, List<Person> females) {
+  public void addPreferCandidatesMale(List<Person> males, List<Person> females) {
     for (Person male : males) {
       List<Person> matches = new ArrayList<>();
       for (Person female : females) {
@@ -20,12 +20,12 @@ public class Filter implements IFilter{
           matches.add(female);
         }
       }
-      male.setPotentialCandidates(matches);
+      male.setPreferCandidates(matches);
     }
   }
 
   @Override
-  public void addPotentialCandidatesFemale(List<Person> males, List<Person> females) {
+  public void addPreferCandidatesFemale(List<Person> males, List<Person> females) {
     for (Person female : females) {
       List<Person> matches = new ArrayList<>();
       for (Person male : males) {
@@ -36,7 +36,7 @@ public class Filter implements IFilter{
           matches.add(male);
         }
       }
-      female.setPotentialCandidates(matches);
+      female.setPreferCandidates(matches);
     }
   }
 

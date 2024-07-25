@@ -5,6 +5,6 @@ import java.util.List;
 import People.Person;
 
 public interface IFilter {
-   void addPotentialCandidatesMale(List<Person> males, List<Person> females);
-   void addPotentialCandidatesFemale(List<Person> males, List<Person> females);
+   void addPreferCandidatesMale(List<Person> males, List<Person> females);
+   void addPreferCandidatesFemale(List<Person> males, List<Person> females);
 }
