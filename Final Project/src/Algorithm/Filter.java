@@ -9,7 +9,7 @@ import People.EducationLevel;
 import People.Person;
 
 
-public class Filter implements IFilter{
+public class Filter implements IFilter {
 
   /**
    * An indexCandidates method that combines interest attributes into a key.
@@ -21,26 +21,77 @@ public class Filter implements IFilter{
    */
   private Map<String, List<Person>> indexCandidates(List<Person> candidates) {
     Map<String, List<Person>> indexMap = new HashMap<>();
-
     for (Person candidate : candidates) {
-      String key = candidate.getInterestEthnicity() + "-" + candidate.getInterestEducation()
-              + "-" + candidate.getRelationshipGoal();
+      String key = createIndexKey(candidate);
       indexMap.computeIfAbsent(key, k -> new ArrayList<>()).add(candidate);
     }
     return indexMap;
   }
 
+  /**
+   * Constructs a key for indexing based on a person's interest in ethnicity, education, and relationship goal.
+   * This key helps in categorizing candidates for faster search during the matching process.
+   *
+   * @param person The person whose interests are used to form the key.
+   * @return A string key representing the combination of interest attributes.
+   */
+  private String createIndexKey(Person person) {
+    return person.getInterestEthnicity() + "-" +
+            person.getInterestEducation() + "-" +
+            person.getRelationshipGoal();
+  }
+
+
+  /**
+   * Checks if one person meets the interest criteria of another person.
+   * This includes matching based on age range, mutual ethnicity interest, education level, and relationship goals.
+   *
+   * @param candidate        The person being considered as a potential match.
+   * @param interestedPerson The person whose preferences are being checked against the candidate.
+   * @return True if all conditions are met, false otherwise.
+   */
+  private boolean isQualifiedCandidate(Person candidate, Person interestedPerson) {
+    boolean ageMatch = candidate.getAge() >= interestedPerson.getInterestAge()[0] &&
+            candidate.getAge() <= interestedPerson.getInterestAge()[1];
+    boolean ethnicityMatch = candidate.getEthnicity().equalsIgnoreCase(interestedPerson.getInterestEthnicity()) &&
+            interestedPerson.getEthnicity().equalsIgnoreCase(candidate.getInterestEthnicity());
+    EducationLevel candidateEducation = EducationLevel.fromString(candidate.getEducation());
+    EducationLevel requiredEducation = EducationLevel.fromString(interestedPerson.getInterestEducation());
+    boolean educationMatch = candidateEducation != null && requiredEducation != null &&
+            candidateEducation.getRank() >= requiredEducation.getRank();
+    boolean relationshipGoalMatch = candidate.getRelationshipGoal().equalsIgnoreCase(interestedPerson.getRelationshipGoal());
+
+    return ageMatch && ethnicityMatch && educationMatch && relationshipGoalMatch;
+  }
+
+  /**
+   * Determines if there is a mutual match between two persons, checking if each person meets the other's criteria.
+   *
+   * @param person1 First person in the potential match.
+   * @param person2 Second person in the potential match.
+   * @return True if both persons qualify each other as matches based on their individual criteria.
+   */
+  private boolean mutualMatch(Person person1, Person person2) {
+    return isQualifiedCandidate(person1, person2) && isQualifiedCandidate(person2, person1);
+  }
+
+  /**
+   * Processes a list of male candidates and finds matches based on the preferences of females.
+   *
+   * @param males   List of male candidates.
+   * @param females List of female candidates whose interests are used to index and match with males.
+   */
   @Override
   public void addPreferCandidatesMale(List<Person> males, List<Person> females) {
     Map<String, List<Person>> femaleIndex = indexCandidates(females);
 
     for (Person male : males) {
       List<Person> matches = new ArrayList<>();
-      String key = male.getInterestEthnicity() + "-" + male.getInterestEducation() + "-" + male.getRelationshipGoal();
+      String key = createIndexKey(male);
       List<Person> potentialFemales = femaleIndex.getOrDefault(key, new ArrayList<>());
 
       for (Person female : potentialFemales) {
-        if (female.getAge() >= male.getInterestAge()[0] && female.getAge() <= male.getInterestAge()[1]) {
+        if (mutualMatch(male, female)) {
           matches.add(female);
         }
       }
@@ -48,56 +99,28 @@ public class Filter implements IFilter{
     }
   }
 
-
+  /**
+   * Processes a list of female candidates and finds matches based on the preferences of males.
+   *
+   * @param males   List of male candidates whose interests are used to index and match with females.
+   * @param females List of female candidates.
+   */
   @Override
   public void addPreferCandidatesFemale(List<Person> males, List<Person> females) {
     Map<String, List<Person>> maleIndex = indexCandidates(males);
 
     for (Person female : females) {
       List<Person> matches = new ArrayList<>();
-      String key = female.getInterestEthnicity() + "-" + female.getInterestEducation() + "-" + female.getRelationshipGoal();
+      String key = createIndexKey(female);
       List<Person> potentialMales = maleIndex.getOrDefault(key, new ArrayList<>());
 
       for (Person male : potentialMales) {
-        if (male.getAge() >= female.getInterestAge()[0] && male.getAge() <= female.getInterestAge()[1]) {
+        if (mutualMatch(female, male)) {
           matches.add(male);
         }
       }
       female.setPreferCandidates(matches);
     }
   }
-  
-  // @Override
-  // public void addPreferCandidatesMale(List<Person> males, List<Person> females) {
-  //   for (Person male : males) {
-  //     List<Person> matches = new ArrayList<>();
-  //     for (Person female : females) {
-  //       if (female.getAge() >= male.getInterestAge()[0] && female.getAge() <= male.getInterestAge()[1]
-  //               && female.getEthnicity().equals(male.getInterestEthnicity())
-  //               && EducationLevel.fromString(female.getEducation()).ordinal() >= EducationLevel.fromString(male.getInterestEducation()).getRank()
-  //               && female.getRelationshipGoal().equals(male.getRelationshipGoal())) {
-  //         // Add potential person to potentialCandidates list only if match filter
-  //         matches.add(female);
-  //       }
-  //     }
-  //     male.setPreferCandidates(matches);
-  //   }
-  // }
-
-  // @Override
-  // public void addPreferCandidatesFemale(List<Person> males, List<Person> females) {
-  //   for (Person female : females) {
-  //     List<Person> matches = new ArrayList<>();
-  //     for (Person male : males) {
-  //       if (male.getAge() >= female.getInterestAge()[0] && male.getAge() <= female.getInterestAge()[1]
-  //               && male.getEthnicity().equals(female.getInterestEthnicity())
-  //               && EducationLevel.fromString(male.getEducation()).getRank() >= EducationLevel.fromString(female.getInterestEducation()).getRank()
-  //               && male.getRelationshipGoal().equals(female.getRelationshipGoal())) {
-  //         matches.add(male);
-  //       }
-  //     }
-  //     female.setPreferCandidates(matches);
-  //   }
-  // }
-
 }
+
