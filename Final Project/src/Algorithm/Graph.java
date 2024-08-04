@@ -2,49 +2,35 @@ package Algorithm;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 
 import People.PeopleManager;
 import People.Person;
 
 public class Graph {
   private Map<Person, List<Edge>> adjacencyList = new HashMap<>();
+  private Map<Person, Person> match; // Maps each person to their match in the graph
+  private Map<Person, Boolean> visited; // Tracks visited persons during search
 
   // Constructor for creating a bipartite graph
   public Graph(PeopleManager pm) {
-    List<Person> allUsers = new ArrayList<>();
-    allUsers.addAll(pm.getMaleList());
-    allUsers.addAll(pm.getFemaleList());
+    initializeGraph(pm);
+  }
 
-    for (Person user : allUsers) {
-      adjacencyList.put(user, new ArrayList<>());
-    }
-
-    for (Person user : allUsers) {
-      for (Person otherUser : allUsers) {
-        if (!user.equals(otherUser)) {
-          int weight = calculateWeight(user, otherUser);
-          // Set capacity based on user's rating
-          int capacity = user.getRating();
-          addEdge(user, otherUser, weight, capacity);
+  private void initializeGraph(PeopleManager pm) {
+    List<Person> males = pm.getMaleList();
+    List<Person> females = pm.getFemaleList();
+    for (Person male : males) {
+      adjacencyList.put(male, new ArrayList<>());
+      for (Person female : females) {
+        int weight = calculateWeight(male, female);
+        if (weight > 0) { // Add an edge if there's a positive weight
+          adjacencyList.get(male).add(new Edge(female, weight));
         }
       }
     }
   }
-
-  private void addEdge(Person from, Person to, int weight, int capacity) {
-    if (!adjacencyList.containsKey(from)) {
-      adjacencyList.put(from, new ArrayList<>());
-    }
-    if (!adjacencyList.containsKey(to)) {
-      adjacencyList.put(to, new ArrayList<>());
-    }
-    adjacencyList.get(from).add(new Edge(to, weight, capacity));
-  }
-
 
   private int calculateWeight(Person user, Person prefer) {
     int weight = 0;
@@ -61,6 +47,40 @@ public class Graph {
     return adjacencyList;
   }
 
+  private boolean dfs(Person person) {
+    // checks if the person has already been visited
+    if (visited.getOrDefault(person, false)) {
+      return false;
+    }
+    // Marks the current person as visited
+    visited.put(person, true);
+
+    // Iterate Potential Matches
+    for (Edge edge : adjacencyList.get(person)) {
+      Person candidate = edge.getTarget();
+      if (!match.containsKey(candidate) || dfs(match.get(candidate))) {
+        match.put(person, candidate);
+        match.put(candidate, person);
+        person.addPotentialCandidate(candidate);
+        if (person.getPotentialCandidates().size() < person.getRating()) {
+          return true;
+        }
+      }
+    }
+    return person.getPotentialCandidates().size() == person.getRating();
+  }
+
+  public void executeSAP() {
+    match = new HashMap<>();
+    visited = new HashMap<>();
+
+    for (Person person : adjacencyList.keySet()) {
+      if (!match.containsKey(person)) {
+        visited.clear();
+        dfs(person);
+      }
+    }
+  }
 
 
 }

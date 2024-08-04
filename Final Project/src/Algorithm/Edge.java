@@ -9,27 +9,21 @@ public class Edge {
   /**
    * to is the vertex to be connected, which is another Person
    */
-  Person to;
+  Person target;
   /**
    * The Weight.
    */
   int weight;  // This could represent combined scores based on interests, religion, etc.
-  /**
-   * The Capacity.
-   */
-  int capacity;  // Capacity to handle multiple matches based on the person's rating
 
   /**
    * Instantiates a new Edge.
    *
-   * @param to       the target "to" of the edge
+   * @param target       the target of the edge
    * @param weight   the weight
-   * @param capacity the capacity of the edge
    */
-  public Edge(Person to, int weight, int capacity) {
-    this.to = to;
+  public Edge(Person target, int weight) {
+    this.target = target;
     this.weight = weight;
-    this.capacity = capacity;
   }
 
   /**
@@ -37,8 +31,8 @@ public class Edge {
    *
    * @return the target of the edge
    */
-  public Person getTo() {
-    return to;
+  public Person getTarget() {
+    return target;
   }
 
   /**
@@ -50,12 +44,4 @@ public class Edge {
     return weight;
   }
 
-  /**
-   * Gets capacity.
-   *
-   * @return the capacity
-   */
-  public int getCapacity() {
-    return capacity;
-  }
 }

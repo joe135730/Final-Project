@@ -16,7 +16,7 @@ public class Algorithm {
 
     // Instantiate Graph for graph algorithm by adding male and female list in one.
     Graph g = new Graph(pm);
-
+    g.executeSAP();
 
     boolean isEmptyPreferList = false; // track to see if person has empty prefer list
     boolean isEmptyPotentialList = false; // track to see if person has empty potential list

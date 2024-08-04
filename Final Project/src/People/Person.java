@@ -24,6 +24,9 @@ public class Person {
   private List<Person> preferCandidates = new ArrayList<>();
   private List<Person> potentialCandidates = new ArrayList<>();
 
+  public Person() {
+  }
+
   /**
    * Gets id.
    *
