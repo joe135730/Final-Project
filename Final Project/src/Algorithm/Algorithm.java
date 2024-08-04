@@ -18,7 +18,8 @@ public class Algorithm {
     Graph g = new Graph(pm);
 
 
-    boolean isEmptyPreferList = false; // track to see if person has empty potential list
+    boolean isEmptyPreferList = false; // track to see if person has empty prefer list
+    boolean isEmptyPotentialList = false; // track to see if person has empty potential list
     // Male Profiles
     // Comment/ Uncomment to check list output
     System.out.println("Male Profiles:");
@@ -38,16 +39,29 @@ public class Algorithm {
               "Coordinates: x: " + male.getCoordinates()[0] +
               ", y: " + male.getCoordinates()[1] + "\n");
 
-      // Check if potential candidates are not empty
+      // Check if Prefer candidates are not empty
       if (!male.getPreferCandidates().isEmpty()) {
-        System.out.println("Potential Matches:");
+        System.out.println("Prefer Matches:");
         for (Person match : male.getPreferCandidates()) {
           System.out.println("\tID: " + match.getId() + " - Name: " + match.getName());
         }
       }
       else {
-        System.out.println("Potential Matches: None");
+        System.out.println("Prefer Matches: None");
         isEmptyPreferList = true;
+      }
+      System.out.println();
+
+      // Check if Potential candidates are not empty
+      if (!male.getPotentialCandidates().isEmpty()) {
+        System.out.println("Potential Matches:");
+        for (Person match : male.getPotentialCandidates()) {
+          System.out.println("\tID: " + match.getId() + " - Name: " + match.getName());
+        }
+      }
+      else {
+        System.out.println("Potential Matches: None");
+        isEmptyPotentialList = true;
       }
       System.out.println();
     }
@@ -72,7 +86,7 @@ public class Algorithm {
                       "Coordinates: x: " + female.getCoordinates()[0] +
                       ", y: " + female.getCoordinates()[1]);
 
-      // Check if potential candidates are not empty
+      // Check if Prefer candidates are not empty
       if (!female.getPreferCandidates().isEmpty()) {
         System.out.println("Prefer Matches:");
         for (Person match : female.getPreferCandidates()) {
@@ -84,10 +98,30 @@ public class Algorithm {
         isEmptyPreferList = true;
       }
       System.out.println();
+
+      // Check if Potential candidates are not empty
+      if (!female.getPotentialCandidates().isEmpty()) {
+        System.out.println("Potential Matches:");
+        for (Person match : female.getPotentialCandidates()) {
+          System.out.println("\tID: " + match.getId() + " - Name: " + match.getName());
+        }
+      }
+      else {
+        System.out.println("Potential Matches: None");
+        isEmptyPotentialList = true;
+      }
+      System.out.println();
     }
 
     // Comment/ Uncomment to see if users has empty potential list
     if (isEmptyPreferList) {
+      System.out.println("There are users have empty prefer list");
+    }
+    else {
+      System.out.println("Every user has prefer list");
+    }
+
+    if (isEmptyPotentialList) {
       System.out.println("There are users have empty potential list");
     }
     else {

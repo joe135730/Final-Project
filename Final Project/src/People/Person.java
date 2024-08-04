@@ -216,7 +216,9 @@ public class Person {
     this.preferCandidates = preferCandidates;
   }
 
-  public void setPotentialCandidates(List<Person> potentialCandidates) {
-    this.potentialCandidates = potentialCandidates;
+  public void addPotentialCandidate(Person candidate) {
+    if (!potentialCandidates.contains(candidate)) {
+      potentialCandidates.add(candidate);
+    }
   }
 }
