@@ -8,7 +8,8 @@ import java.util.stream.Collectors;
 import People.EducationLevel;
 import People.Person;
 
-public class Filter implements IFilter{
+
+public class Filter implements IFilter {
   @Override
   public void addPreferCandidatesMale(List<Person> males, List<Person> females) {
     // Group females by age, ethnicity, education, and relationship goal
@@ -30,23 +31,41 @@ public class Filter implements IFilter{
       for (int age = minAge; age <= maxAge; age++) {
         String key = age + "-" + interestEthnicity + "-" + interestEducationRank + "-" + interestRelationshipGoal;
         if (femalesGrouped.containsKey(key)) {
-          matches.addAll(femalesGrouped.get(key));
+          List<Person> femaleMatch = femalesGrouped.get(key);
+          matches.addAll(femaleMatch);
+
+          for(Person female : femaleMatch){
+            female.addPreferCandidate(male);
+          }
         }
       }
       male.setPreferCandidates(matches);
+
     }
   }
+
   public void addPreferCandidatesFemale(List<Person> males, List<Person> females) {
     // Group males by age, ethnicity, education, and relationship goal
+    /*
     Map<String, List<Person>> malesGrouped = males.stream().collect(
             Collectors.groupingBy(male -> male.getAge() + "-" +
                     male.getEthnicity() + "-" +
                     EducationLevel.fromString(male.getEducation()).ordinal() + "-" +
                     male.getRelationshipGoal())
     );
-
+    */
     for (Person female : females) {
       List<Person> matches = new ArrayList<>();
+      for(Person male : males){
+        if(male.getAge() >= female.getInterestAge()[0] && male.getAge() <= female.getInterestAge()[1]
+        && male.getEthnicity().equals(female.getInterestEthnicity())
+        && EducationLevel.fromString(male.getEducation()).ordinal() >= EducationLevel.fromString(female.getInterestEducation()).ordinal()
+        && male.getRelationshipGoal().equals(female.getRelationshipGoal())){
+          matches.add(male);
+          male.addPreferCandidate(female);
+        }
+      }
+      /*
       int minAge = female.getInterestAge()[0];
       int maxAge = female.getInterestAge()[1];
       String interestEthnicity = female.getInterestEthnicity();
@@ -60,42 +79,8 @@ public class Filter implements IFilter{
             matches.addAll(malesGrouped.get(key));
           }
         }
-      }
+      }*/
       female.setPreferCandidates(matches);
     }
   }
-
-  /*
-  public void addPreferCandidatesMale(List<Person> males, List<Person> females) {
-    for (Person male : males) {
-      List<Person> matches = new ArrayList<>();
-      for (Person female : females) {
-        if (female.getAge() >= male.getInterestAge()[0] && female.getAge() <= male.getInterestAge()[1]
-                && female.getEthnicity().equals(male.getInterestEthnicity())
-                && EducationLevel.fromString(female.getEducation()).ordinal() >= EducationLevel.fromString(male.getInterestEducation()).getRank()
-                && female.getRelationshipGoal().equals(male.getRelationshipGoal())) {
-          // Add potential person to potentialCandidates list only if match filter
-          matches.add(female);
-        }
-      }
-      male.setPreferCandidates(matches);
-    }
-  }
-
-  @Override
-  public void addPreferCandidatesFemale(List<Person> males, List<Person> females) {
-    for (Person female : females) {
-      List<Person> matches = new ArrayList<>();
-      for (Person male : males) {
-        if (male.getAge() >= female.getInterestAge()[0] && male.getAge() <= female.getInterestAge()[1]
-                && male.getEthnicity().equals(female.getInterestEthnicity())
-                && EducationLevel.fromString(male.getEducation()).getRank() >= EducationLevel.fromString(female.getInterestEducation()).getRank()
-                && male.getRelationshipGoal().equals(female.getRelationshipGoal())) {
-          matches.add(male);
-        }
-      }
-      female.setPreferCandidates(matches);
-    }
-  }
-*/
 }

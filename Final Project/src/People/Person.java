@@ -219,4 +219,11 @@ public class Person {
   public void setPotentialCandidates(List<Person> potentialCandidates) {
     this.potentialCandidates = potentialCandidates;
   }
+
+  public void addPreferCandidate(Person person){
+    if(preferCandidates == null) preferCandidates = new ArrayList<>();
+    if(!preferCandidates.contains(person)){
+      preferCandidates.add(person);
+    }
+  }
 }
