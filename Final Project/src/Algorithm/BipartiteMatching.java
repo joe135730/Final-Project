@@ -8,13 +8,14 @@ import java.util.Map;
 import People.PeopleManager;
 import People.Person;
 
-public class Graph {
+public class BipartiteMatching {
   private Map<Person, List<Edge>> adjacencyList = new HashMap<>();
   private Map<Person, Person> match; // Maps each person to their match in the graph
   private Map<Person, Boolean> visited; // Tracks visited persons during search
+  private Map<Person, Integer> dist; // Distance for BFS
 
   // Constructor for creating a bipartite graph
-  public Graph(PeopleManager pm) {
+  public BipartiteMatching(PeopleManager pm) {
     initializeGraph(pm);
   }
 
@@ -25,8 +26,10 @@ public class Graph {
       adjacencyList.put(male, new ArrayList<>());
       for (Person female : females) {
         int weight = calculateWeight(male, female);
-        if (weight > 0) { // Add an edge if there's a positive weight
+//        System.out.println("Weight between " + male.getName() + " and " + female.getName() + ": " + weight); // Debugging line
+        if (weight >= 50) { // Add an edge if weight > 50
           adjacencyList.get(male).add(new Edge(female, weight));
+//          System.out.println("Edge created between " + male.getName() + " and " + female.getName()); // Debugging line
         }
       }
     }
@@ -38,8 +41,12 @@ public class Graph {
     if (prefer.getPreferCandidates().contains(user)) weight += 25; // Another 25% if mutual
     if (user.getInterest().equals(prefer.getInterest())) weight += 20; // 20% for shared interest
     if (user.getReligion().equals(prefer.getReligion())) weight += 10; // 10% for same religion
-    if (Math.abs(user.getCoordinates()[0] - prefer.getCoordinates()[0]) +
-            Math.abs(user.getCoordinates()[1] - prefer.getCoordinates()[1]) < 50) weight += 20; // 20% for close coordinates
+    // Distance of two People
+    double distance = Math.sqrt(
+            Math.pow(Math.abs(user.getCoordinates()[0] - prefer.getCoordinates()[0]), 2) +
+            Math.pow(Math.abs(user.getCoordinates()[1] - prefer.getCoordinates()[1]), 2));
+//    System.out.println("Distance is : " + distance); // Debugging line
+    if (distance <= 100) weight += 20; // 20% for close coordinates
     return weight;
   }
 
@@ -47,6 +54,7 @@ public class Graph {
     return adjacencyList;
   }
 
+// Dfs approach
   private boolean dfs(Person person) {
     // checks if the person has already been visited
     if (visited.getOrDefault(person, false)) {
@@ -58,28 +66,36 @@ public class Graph {
     // Iterate Potential Matches
     for (Edge edge : adjacencyList.get(person)) {
       Person candidate = edge.getTarget();
-      if (!match.containsKey(candidate) || dfs(match.get(candidate))) {
+      if (!match.containsKey(candidate) || (match.get(candidate) != person && dfs(match.get(candidate)))) {
         match.put(person, candidate);
         match.put(candidate, person);
         person.addPotentialCandidate(candidate);
-        if (person.getPotentialCandidates().size() < person.getRating()) {
-          return true;
-        }
+        candidate.addPotentialCandidate(person); // Ensure mutual adding
+        return true; // Indicate a successful match
       }
     }
-    return person.getPotentialCandidates().size() == person.getRating();
+    return false; // No match found or possible
   }
 
+  //  Bipartite matching via Shortest Augmenting Path (SAP) Algorithm
   public void executeSAP() {
     match = new HashMap<>();
     visited = new HashMap<>();
 
-    for (Person person : adjacencyList.keySet()) {
-      if (!match.containsKey(person)) {
-        visited.clear();
-        dfs(person);
+    boolean changed;
+    do {
+      changed = false;
+      visited.clear();
+      for (Person person : adjacencyList.keySet()) {
+        if (!match.containsKey(person) || !visited.getOrDefault(person, false)) {
+          visited.clear();
+          if (dfs(person)) {
+            changed = true; // Indicates that a new match was found
+          }
+        }
       }
-    }
+    } while (changed); // Continue while improvements are made
+
   }
 
 

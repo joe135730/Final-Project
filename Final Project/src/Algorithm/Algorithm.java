@@ -1,8 +1,5 @@
 package Algorithm;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import People.PeopleManager;
 import People.Person;
 
@@ -15,11 +12,13 @@ public class Algorithm {
     filter.addPreferCandidatesFemale(pm.getMaleList(), pm.getFemaleList());
 
     // Instantiate Graph for graph algorithm by adding male and female list in one.
-    Graph g = new Graph(pm);
-    g.executeSAP();
+//    BipartiteMatching bm = new BipartiteMatching(pm);
+//    bm.executeSAP();
+    Test t = new Test(pm);
+    t.executeSAP();
 
-    boolean isEmptyPreferList = false; // track to see if person has empty prefer list
-    boolean isEmptyPotentialList = false; // track to see if person has empty potential list
+    int noPreferCount = 2500; // track to see if person has empty prefer list
+    int noPotentialCount = 2500; // track to see if person has empty potential list
     // Male Profiles
     // Comment/ Uncomment to check list output
     System.out.println("Male Profiles:");
@@ -48,7 +47,7 @@ public class Algorithm {
       }
       else {
         System.out.println("Prefer Matches: None");
-        isEmptyPreferList = true;
+        noPreferCount--;
       }
       System.out.println();
 
@@ -61,7 +60,7 @@ public class Algorithm {
       }
       else {
         System.out.println("Potential Matches: None");
-        isEmptyPotentialList = true;
+        noPotentialCount--;
       }
       System.out.println();
     }
@@ -95,7 +94,7 @@ public class Algorithm {
       }
       else {
         System.out.println("Prefer Matches: None");
-        isEmptyPreferList = true;
+        noPreferCount--;
       }
       System.out.println();
 
@@ -108,24 +107,13 @@ public class Algorithm {
       }
       else {
         System.out.println("Potential Matches: None");
-        isEmptyPotentialList = true;
+        noPotentialCount--;
       }
       System.out.println();
     }
 
     // Comment/ Uncomment to see if users has empty potential list
-    if (isEmptyPreferList) {
-      System.out.println("There are users have empty prefer list");
-    }
-    else {
-      System.out.println("Every user has prefer list");
-    }
-
-    if (isEmptyPotentialList) {
-      System.out.println("There are users have empty potential list");
-    }
-    else {
-      System.out.println("Every user has potential list");
-    }
+    System.out.println("Prefer Candidates Match Ratio: " + noPreferCount + "/" + 2500);
+    System.out.println("Potential Candidates Match Ratio: " + noPotentialCount + "/" + 2500);
   }
 }
