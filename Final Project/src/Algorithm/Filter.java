@@ -34,8 +34,13 @@ public class Filter implements IFilter {
           List<Person> femaleMatch = femalesGrouped.get(key);
           matches.addAll(femaleMatch);
 
+          // Add male to female's preferred candidates list reciprocally
           for(Person female : femaleMatch){
             female.addPreferCandidate(male);
+
+            if(!male.getPreferCandidates().contains(female)){
+              male.addPreferCandidate(female);
+            }
           }
         }
       }
@@ -46,26 +51,16 @@ public class Filter implements IFilter {
 
   public void addPreferCandidatesFemale(List<Person> males, List<Person> females) {
     // Group males by age, ethnicity, education, and relationship goal
-    /*
+
     Map<String, List<Person>> malesGrouped = males.stream().collect(
             Collectors.groupingBy(male -> male.getAge() + "-" +
                     male.getEthnicity() + "-" +
                     EducationLevel.fromString(male.getEducation()).ordinal() + "-" +
                     male.getRelationshipGoal())
     );
-    */
+
     for (Person female : females) {
-      List<Person> matches = new ArrayList<>();
-      for(Person male : males){
-        if(male.getAge() >= female.getInterestAge()[0] && male.getAge() <= female.getInterestAge()[1]
-        && male.getEthnicity().equals(female.getInterestEthnicity())
-        && EducationLevel.fromString(male.getEducation()).ordinal() >= EducationLevel.fromString(female.getInterestEducation()).ordinal()
-        && male.getRelationshipGoal().equals(female.getRelationshipGoal())){
-          matches.add(male);
-          male.addPreferCandidate(female);
-        }
-      }
-      /*
+      List<Person> fmatches = new ArrayList<>();
       int minAge = female.getInterestAge()[0];
       int maxAge = female.getInterestAge()[1];
       String interestEthnicity = female.getInterestEthnicity();
@@ -76,11 +71,30 @@ public class Filter implements IFilter {
         for (int eduRank = interestEducationRank; eduRank <= EducationLevel.values().length; eduRank++) {
           String key = age + "-" + interestEthnicity + "-" + eduRank + "-" + interestRelationshipGoal;
           if (malesGrouped.containsKey(key)) {
-            matches.addAll(malesGrouped.get(key));
+            List<Person> maleMatch = malesGrouped.get(key);
+            fmatches.addAll(maleMatch);
+
+            for (Person male : maleMatch) {
+              male.addPreferCandidate(female);
+
+              if (!female.getPreferCandidates().contains(male)) {
+                female.addPreferCandidate(male);
+              }
+            }
           }
         }
-      }*/
-      female.setPreferCandidates(matches);
+      }
     }
   }
 }
+/*
+      for(Person male : males){
+        if(male.getAge() >= female.getInterestAge()[0] && male.getAge() <= female.getInterestAge()[1]
+        && male.getEthnicity().equals(female.getInterestEthnicity())
+        && EducationLevel.fromString(male.getEducation()).ordinal() >= EducationLevel.fromString(female.getInterestEducation()).ordinal()
+        && male.getRelationshipGoal().equals(female.getRelationshipGoal())){
+          matches.add(male);
+          male.addPreferCandidate(female);
+        }
+      }
+*/
