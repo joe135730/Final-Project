@@ -224,4 +224,11 @@ public class Person {
       potentialCandidates.add(candidate);
     }
   }
+
+  public void addPreferCandidate(Person person){
+    if(preferCandidates == null) preferCandidates = new ArrayList<>();
+    if(!preferCandidates.contains(person)){
+      preferCandidates.add(person);
+    }
+  }
 }

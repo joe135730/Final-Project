@@ -19,6 +19,8 @@ public class Algorithm {
 
     int noPreferCount = 2500; // track to see if person has empty prefer list
     int noPotentialCount = 2500; // track to see if person has empty potential list
+
+    boolean isEmptyPreferList = false; // track to see if person has empty potential list
     // Male Profiles
     // Comment/ Uncomment to check list output
     System.out.println("Male Profiles:");
