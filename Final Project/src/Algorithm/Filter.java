@@ -35,13 +35,13 @@ public class Filter implements IFilter {
           matches.addAll(femaleMatch);
 
           // Add male to female's preferred candidates list reciprocally
-          for(Person female : femaleMatch){
-            female.addPreferCandidate(male);
-
-            if(!male.getPreferCandidates().contains(female)){
-              male.addPreferCandidate(female);
-            }
-          }
+//          for(Person female : femaleMatch){
+//            female.addPreferCandidate(male);
+//
+//            if(!male.getPreferCandidates().contains(female)){
+//              male.addPreferCandidate(female);
+//            }
+//          }
         }
       }
       male.setPreferCandidates(matches);
@@ -74,13 +74,14 @@ public class Filter implements IFilter {
             List<Person> maleMatch = malesGrouped.get(key);
             fmatches.addAll(maleMatch);
 
-            for (Person male : maleMatch) {
-              male.addPreferCandidate(female);
+//            for (Person male : maleMatch) {
+//              male.addPreferCandidate(female);
+//
+//              if (!female.getPreferCandidates().contains(male)) {
+//                female.addPreferCandidate(male);
+//              }
+//            }
 
-              if (!female.getPreferCandidates().contains(male)) {
-                female.addPreferCandidate(male);
-              }
-            }
           }
         }
       }

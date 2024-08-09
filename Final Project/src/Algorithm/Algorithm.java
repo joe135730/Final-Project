@@ -12,10 +12,10 @@ public class Algorithm {
     filter.addPreferCandidatesFemale(pm.getMaleList(), pm.getFemaleList());
 
     // Instantiate Graph for graph algorithm by adding male and female list in one.
-//    BipartiteMatching bm = new BipartiteMatching(pm);
-//    bm.executeSAP();
-    Test t = new Test(pm);
-    t.executeSAP();
+    BipartiteMatching bm = new BipartiteMatching(pm);
+    bm.executeSAP();
+//    Test t = new Test(pm);
+//    t.executeSAP();
 
     int noPreferCount = 2500; // track to see if person has empty prefer list
     int noPotentialCount = 2500; // track to see if person has empty potential list
