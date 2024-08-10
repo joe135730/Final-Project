@@ -30,7 +30,7 @@ public class Filter implements IFilter {
 
   /**
    * Add prefer candidates female method
-   * Attributes: input List of male and list of female from Person object
+   * Attributes: input List of male and List of female from Person object
    */
   public void addPreferCandidatesFemale(List<Person> males, List<Person> females) {
     // Group males by age, ethnicity, education, and relationship goal
