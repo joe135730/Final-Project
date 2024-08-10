@@ -10,10 +10,14 @@ import People.Person;
 
 /**
  * Filter class implements IFilter interface.
- * Attributes: input List of male and list of female from Person object
- * This method is to filter the female group by age, ethnicity, education, and relationship goal.
+ * This method is to filter the group by age, ethnicity, education, and relationship goal.
  */
 public class Filter implements IFilter {
+
+  /**
+   * Add prefer candidates male method
+   * Attributes: input List of male and list of female from Person object
+   */
   @Override
   public void addPreferCandidatesMale(List<Person> males, List<Person> females) {
     Map<String, List<Person>> femalesGroup = groupAttributes(females);
@@ -24,6 +28,10 @@ public class Filter implements IFilter {
     }
   }
 
+  /**
+   * Add prefer candidates female method
+   * Attributes: input List of male and list of female from Person object
+   */
   public void addPreferCandidatesFemale(List<Person> males, List<Person> females) {
     // Group males by age, ethnicity, education, and relationship goal
     Map<String, List<Person>> maleGroup = groupAttributes(males);
@@ -34,6 +42,10 @@ public class Filter implements IFilter {
     }
   }
 
+  /**
+   * Group attributes method
+   * Attributes: input List of people from Person object
+   */
   public Map<String, List<Person>> groupAttributes(List<Person> people) {
     //  key: a string to concatenation these attributes
     //  value: list of female who share these attributes
@@ -46,6 +58,12 @@ public class Filter implements IFilter {
   //only matches with a specific edu rank -- match with the same or higher rank
   //for (int eduRank = interestEducationRank; eduRank <= EducationLevel.values().length; eduRank++) {
 
+  /**
+   * Find matches method
+   * Attributes: input List of group from Person object, person from the Person object
+   * This method is to filter the group by age, ethnicity, education, and relationship goal
+   * and return the prefer matches.
+   */
   public List<Person> findMatches(Person person, Map<String, List<Person>> group) {
     //  initializes an empty list to store person that match the current preferences
     List<Person> preferMatch = new ArrayList<>();
@@ -70,18 +88,3 @@ public class Filter implements IFilter {
     return preferMatch;
   }
 }
-
-
-
-
-/*
-      for(Person male : males){
-        if(male.getAge() >= female.getInterestAge()[0] && male.getAge() <= female.getInterestAge()[1]
-        && male.getEthnicity().equals(female.getInterestEthnicity())
-        && EducationLevel.fromString(male.getEducation()).ordinal() >= EducationLevel.fromString(female.getInterestEducation()).ordinal()
-        && male.getRelationshipGoal().equals(female.getRelationshipGoal())){
-          matches.add(male);
-          male.addPreferCandidate(female);
-        }
-      }
-*/
