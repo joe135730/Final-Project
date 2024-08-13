@@ -1,6 +1,7 @@
 package Algorithm;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -9,94 +10,108 @@ import People.EducationLevel;
 import People.Person;
 
 /**
- * The class implements IFilter interface providing methods to add preferred candidates
- * for male/ female lists based on specified preferences and criteria.
+ * Filter class implements IFilter interface.
+ * This method is to filter the group by age, ethnicity, education, and relationship goal.
  */
 public class Filter implements IFilter {
+  private Map<String, List<Person>> dp = new HashMap<>();
 
   /**
-   * Filters and adds preferred female candidates to each male's preferred list based on the
-   * male's interests in age, ethnicity, education level, and relationship goal.
-   *
-   * @param males   List of male Person objects
-   * @param females List of female Person objects
+   * Add Prefer Candidates Male method
+   * Attributes: input List of male and list of female from Person object
    */
   @Override
   public void addPreferCandidatesMale(List<Person> males, List<Person> females) {
-    // Group all female candidate by age, ethnicity, education, and relationship goals
-    Map<String, List<Person>> femalesGrouped = females.stream().collect(
-            Collectors.groupingBy(female -> female.getAge() + "-" +
-                    female.getEthnicity() + "-" +
-                    EducationLevel.fromString(female.getEducation()).ordinal() + "-" +
-                    female.getRelationshipGoal())
-    );
+    Map<String, List<Person>> femalesGroup = groupAttributes(females);
 
-    // Iterate over each male to find matching female candidates based on his preferences
     for (Person male : males) {
-      List<Person> matches = new ArrayList<>();
+      String dpKey = generate(male);
 
-      // Get age range from male's interest
-      int minAge = male.getInterestAge()[0];
-      int maxAge = male.getInterestAge()[1];
-      // Get other interests including ethnicity, education rank and relationship goal
-      String interestEthnicity = male.getInterestEthnicity();
-      int interestEducationRank = EducationLevel.fromString(male.getInterestEducation()).ordinal();
-      String interestRelationshipGoal = male.getRelationshipGoal();
-
-      // Iterate through the age range to find matches
-      for (int age = minAge; age <= maxAge; age++) {
-        String key = age + "-" + interestEthnicity + "-" + interestEducationRank + "-" + interestRelationshipGoal;
-        // Check if there are females matching the criteria
-        if (femalesGrouped.containsKey(key)) {
-          List<Person> femaleMatch = femalesGrouped.get(key);
-          matches.addAll(femaleMatch);
-        }
+      if(!dp.containsKey(dpKey)) {
+        dp.put(dpKey, findMatches(male, femalesGroup));
       }
-      // Sets the matched candidates for the male
-      male.setPreferCandidates(matches);
-
+      male.setPreferCandidates(dp.get(dpKey));
     }
   }
 
   /**
-   * Filters and adds preferred male candidates to each female's preferred list based on the
-   * female's interests in age, ethnicity, education level, and relationship goal.
-   *
-   * @param males   List of male Person objects
-   * @param females List of female Person objects
+   * Add Prefer Candidates Female method
+   * Attributes: input List of male and list of female from Person object
    */
   public void addPreferCandidatesFemale(List<Person> males, List<Person> females) {
-    // Group all male by age, ethnicity, education, and relationship goal
-    Map<String, List<Person>> malesGrouped = males.stream().collect(
-            Collectors.groupingBy(male -> male.getAge() + "-" +
-                    male.getEthnicity() + "-" +
-                    EducationLevel.fromString(male.getEducation()).ordinal() + "-" +
-                    male.getRelationshipGoal())
-    );
+    // Group males by age, ethnicity, education, and relationship goal
+    Map<String, List<Person>> maleGroup = groupAttributes(males);
 
-    // Iterate over each female to find matching male candidates based on her preferences
-    for (Person female : females) {
-      List<Person> fmatches = new ArrayList<>();
+    for(Person female : females){
+      String dpKey = generate(female);
 
-      // Get age range from female's interest
-      int minAge = female.getInterestAge()[0];
-      int maxAge = female.getInterestAge()[1];
-      // Get other interests including ethnicity, education rank and relationship goal
-      String interestEthnicity = female.getInterestEthnicity();
-      int interestEducationRank = EducationLevel.fromString(female.getInterestEducation()).ordinal();
-      String interestRelationshipGoal = female.getRelationshipGoal();
-
-      // Iterate through the age and education range to find matches
-      for (int age = minAge; age <= maxAge; age++) {
-        for (int eduRank = interestEducationRank; eduRank <= EducationLevel.values().length; eduRank++) {
-          String key = age + "-" + interestEthnicity + "-" + eduRank + "-" + interestRelationshipGoal;
-          // Check if there are males matching the criteria
-          if (malesGrouped.containsKey(key)) {
-            List<Person> maleMatch = malesGrouped.get(key);
-            fmatches.addAll(maleMatch);
-          }
-        }
+      if(!dp.containsKey(dpKey)) {
+        dp.put(dpKey, findMatches(female, maleGroup));
       }
+      female.setPreferCandidates(dp.get(dpKey));
     }
   }
+
+  /**
+   * Group Attributes method
+   * Attributes: input List of people from Person object
+   * This method is to group people by their attributes.
+   */
+  public Map<String, List<Person>> groupAttributes(List<Person> people) {
+    //  key: a string to concatenation these attributes
+    //  value: list of female who share these attributes
+    return people.stream().collect(Collectors.groupingBy(person ->
+            person.getAge() + "-" + person.getEthnicity() + "-" +
+                    EducationLevel.fromString(person.getEducation()).ordinal() + "-" +
+                    person.getRelationshipGoal()
+    ));
+  }
+
+  /**
+   * Generate method
+   * Attributes: input person from the Person object
+   * This method is to generate a key based on person's preference
+   */
+  public String generate(Person person) {
+    String interestEthnicity = person.getInterestEthnicity();
+
+    //  Converts the person's interest in education level into an ordinal value, representing the level of education
+    String interestEducationRank = String.valueOf(EducationLevel.fromString(person.getInterestEducation()).ordinal());
+    String interestRelationshipGoal = person.getRelationshipGoal();
+
+    //  extract the minimum and maximum ages that person is interested in from an array
+    int minAge = person.getInterestAge()[0];
+    int maxAge = person.getInterestAge()[1];
+
+    //  Constructs the key from the map based on the current age and the male's preferences
+    return minAge + "-" + maxAge + "-" + interestEthnicity + "-" + interestEducationRank + "-" + interestRelationshipGoal;
+  }
+
+  /**
+   * Find Matches method
+   * Attributes: input List of group from Person object, person from the Person object
+   * This method is to filter the group (by age, ethnicity, education, and relationship goal)
+   * to find people in other group that match the person's preferences and return the prefer matches .
+   */
+  public List<Person> findMatches(Person person, Map<String, List<Person>> group) {
+    //  initializes an empty list to store person that match the current preferences
+    List<Person> preferMatch = new ArrayList<>();
+    String interestEthnicity = person.getInterestEthnicity();
+
+    //  Converts the person's interest in education level into an ordinal value, representing the level of education
+    String interestEducationRank = String.valueOf(EducationLevel.fromString(person.getInterestEducation()).ordinal());
+    String interestRelationshipGoal = person.getRelationshipGoal();
+
+    //  extract the minimum and maximum ages that person is interested in from an array
+    int minAge = person.getInterestAge()[0];
+    int maxAge = person.getInterestAge()[1];
+
+    for (int age = minAge; age <= maxAge; age++) {
+      //  Constructs the key from the map based on the current age and the male's preferences
+      String key = age + "-" + interestEthnicity + "-" + interestEducationRank + "-" + interestRelationshipGoal;
+      preferMatch.addAll(group.getOrDefault(key, new ArrayList<>()));
+    }
+    return preferMatch;
+  }
+  // final test
 }
