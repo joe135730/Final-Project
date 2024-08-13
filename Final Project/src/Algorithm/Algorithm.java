@@ -13,12 +13,10 @@ public class Algorithm {
 
     // Instantiate Graph for graph algorithm by adding male and female list in one.
     BipartiteMatching bm = new BipartiteMatching(pm);
-    bm.executeSAP();
-//    Test t = new Test(pm);
-//    t.executeSAP();
+    bm.bipartiteMatching();
 
-    int noPreferCount = 2500; // track to see if person has empty prefer list
-    int noPotentialCount = 2500; // track to see if person has empty potential list
+    int noPreferCount = 2000; // track to see if person has empty prefer list
+    int noPotentialCount = 2000; // track to see if person has empty potential list
 
     boolean isEmptyPreferList = false; // track to see if person has empty potential list
     // Male Profiles
@@ -44,7 +42,8 @@ public class Algorithm {
       if (!male.getPreferCandidates().isEmpty()) {
         System.out.println("Prefer Matches:");
         for (Person match : male.getPreferCandidates()) {
-          System.out.println("\tID: " + match.getId() + " - Name: " + match.getName());
+          int weights = bm.calculateWeight(male, match);
+          System.out.println("\tID: " + match.getId() + " - Name: " + match.getName() + ", Weights: " + weights);
         }
       }
       else {
@@ -57,7 +56,8 @@ public class Algorithm {
       if (!male.getPotentialCandidates().isEmpty()) {
         System.out.println("Potential Matches:");
         for (Person match : male.getPotentialCandidates()) {
-          System.out.println("\tID: " + match.getId() + " - Name: " + match.getName());
+          int weights = bm.calculateWeight(male, match);
+          System.out.println("\tID: " + match.getId() + " - Name: " + match.getName() + ", Weights: " + weights);
         }
       }
       else {
@@ -91,7 +91,8 @@ public class Algorithm {
       if (!female.getPreferCandidates().isEmpty()) {
         System.out.println("Prefer Matches:");
         for (Person match : female.getPreferCandidates()) {
-          System.out.println("\tID: " + match.getId() + " - Name: " + match.getName());
+          int weights = bm.calculateWeight(female, match);
+          System.out.println("\tID: " + match.getId() + " - Name: " + match.getName() + ", Weights: " + weights);
         }
       }
       else {
@@ -104,7 +105,8 @@ public class Algorithm {
       if (!female.getPotentialCandidates().isEmpty()) {
         System.out.println("Potential Matches:");
         for (Person match : female.getPotentialCandidates()) {
-          System.out.println("\tID: " + match.getId() + " - Name: " + match.getName());
+          int weights = bm.calculateWeight(female, match);
+          System.out.println("\tID: " + match.getId() + " - Name: " + match.getName() + ", Weights: " + weights);
         }
       }
       else {
@@ -115,7 +117,7 @@ public class Algorithm {
     }
 
     // Comment/ Uncomment to see if users has empty potential list
-    System.out.println("Prefer Candidates Match Ratio: " + noPreferCount + "/" + 2500);
-    System.out.println("Potential Candidates Match Ratio: " + noPotentialCount + "/" + 2500);
+    System.out.println("Prefer Candidates Match Ratio: " + noPreferCount + "/" + 2000);
+    System.out.println("Potential Candidates Match Ratio: " + noPotentialCount + "/" + 2000);
   }
 }

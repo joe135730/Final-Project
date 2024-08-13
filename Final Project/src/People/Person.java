@@ -20,12 +20,8 @@ public class Person {
   private String interestEducation;
   private String relationshipGoal;
   private String coordinates;
-  private int rating;
   private List<Person> preferCandidates = new ArrayList<>();
   private List<Person> potentialCandidates = new ArrayList<>();
-
-  public Person() {
-  }
 
   /**
    * Gets id.
@@ -114,10 +110,6 @@ public class Person {
     coords[0] = Double.parseDouble(stringCoordinates[0].trim()); // Trim whitespace and parse the latitude
     coords[1] = Double.parseDouble(stringCoordinates[1].trim()); // Trim whitespace and parse the longitude
     return coords;
-  }
-
-  public int getRating() {
-    return rating;
   }
 
   public List<Person> getPreferCandidates() {
@@ -209,10 +201,6 @@ public class Person {
    */
   public void setCoordinates(String coordinates) {
     this.coordinates = coordinates;
-  }
-
-  public void setRating(int rating) {
-    this.rating = rating;
   }
 
   public void setPreferCandidates(List<Person> preferCandidates) {

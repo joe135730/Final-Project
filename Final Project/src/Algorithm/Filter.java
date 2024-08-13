@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import People.EducationLevel;
 import People.Person;
 
-
 public class Filter implements IFilter {
   @Override
   public void addPreferCandidatesMale(List<Person> males, List<Person> females) {
@@ -33,15 +32,6 @@ public class Filter implements IFilter {
         if (femalesGrouped.containsKey(key)) {
           List<Person> femaleMatch = femalesGrouped.get(key);
           matches.addAll(femaleMatch);
-
-          // Add male to female's preferred candidates list reciprocally
-//          for(Person female : femaleMatch){
-//            female.addPreferCandidate(male);
-//
-//            if(!male.getPreferCandidates().contains(female)){
-//              male.addPreferCandidate(female);
-//            }
-//          }
         }
       }
       male.setPreferCandidates(matches);
@@ -73,29 +63,9 @@ public class Filter implements IFilter {
           if (malesGrouped.containsKey(key)) {
             List<Person> maleMatch = malesGrouped.get(key);
             fmatches.addAll(maleMatch);
-
-//            for (Person male : maleMatch) {
-//              male.addPreferCandidate(female);
-//
-//              if (!female.getPreferCandidates().contains(male)) {
-//                female.addPreferCandidate(male);
-//              }
-//            }
-
           }
         }
       }
     }
   }
 }
-/*
-      for(Person male : males){
-        if(male.getAge() >= female.getInterestAge()[0] && male.getAge() <= female.getInterestAge()[1]
-        && male.getEthnicity().equals(female.getInterestEthnicity())
-        && EducationLevel.fromString(male.getEducation()).ordinal() >= EducationLevel.fromString(female.getInterestEducation()).ordinal()
-        && male.getRelationshipGoal().equals(female.getRelationshipGoal())){
-          matches.add(male);
-          male.addPreferCandidate(female);
-        }
-      }
-*/

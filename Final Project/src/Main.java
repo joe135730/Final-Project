@@ -1,9 +1,7 @@
 import java.io.IOException;
 
 import Algorithm.Algorithm;
-import Algorithm.Filter;
 import People.PeopleManager;
-import People.Person;
 
 import static API.RandomAPI.callAPI;
 

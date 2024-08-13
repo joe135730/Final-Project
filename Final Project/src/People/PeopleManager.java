@@ -3,8 +3,6 @@ package People;
 import java.util.ArrayList;
 import java.util.List;
 
-import People.Person;
-
 public class PeopleManager {
   private final List<Person> maleList;
   private final List<Person> femaleList;

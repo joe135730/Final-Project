@@ -8,18 +8,31 @@ import java.util.Map;
 import People.PeopleManager;
 import People.Person;
 
+/**
+ * The type Bipartite matching.
+ */
 public class BipartiteMatching {
   private Map<Person, List<Edge>> adjacencyList = new HashMap<>();
   private Map<Person, Person> match; // Maps each person to their match in the graph
   private Map<Person, Boolean> visited; // Tracks visited persons during search
   private Map<Person, Integer> dist; // Distance for BFS
 
-  // Constructor for creating a bipartite graph
+  /**
+   * Instantiates a new Bipartite matching.
+   *
+   * @param pm the pm
+   */
+// Constructor for creating a bipartite graph
   public BipartiteMatching(PeopleManager pm) {
     initializeGraph(pm);
   }
 
-  private void initializeGraph(PeopleManager pm) {
+  /**
+   * Initialize graph.
+   *
+   * @param pm the pm
+   */
+  public void initializeGraph(PeopleManager pm) {
     List<Person> males = pm.getMaleList();
     List<Person> females = pm.getFemaleList();
     for (Person male : males) {
@@ -35,27 +48,44 @@ public class BipartiteMatching {
     }
   }
 
-  private int calculateWeight(Person user, Person prefer) {
+  /**
+   * Calculate weight int.
+   *
+   * @param user   the user
+   * @param target the target
+   * @return the int
+   */
+  public int calculateWeight(Person user, Person target) {
     int weight = 0;
-    if (user.getPreferCandidates().contains(prefer)) weight += 25; // 25% for being in prefer list
-    if (prefer.getPreferCandidates().contains(user)) weight += 25; // Another 25% if mutual
-    if (user.getInterest().equals(prefer.getInterest())) weight += 20; // 20% for shared interest
-    if (user.getReligion().equals(prefer.getReligion())) weight += 10; // 10% for same religion
+    if (user.getPreferCandidates().contains(target)) weight += 25; // 25% for being in prefer list
+    if (target.getPreferCandidates().contains(user)) weight += 25; // Another 25% if mutual
+    if (user.getInterest().equals(target.getInterest())) weight += 20; // 20% for shared interest
+    if (user.getReligion().equals(target.getReligion())) weight += 10; // 10% for same religion
     // Distance of two People
     double distance = Math.sqrt(
-            Math.pow(Math.abs(user.getCoordinates()[0] - prefer.getCoordinates()[0]), 2) +
-            Math.pow(Math.abs(user.getCoordinates()[1] - prefer.getCoordinates()[1]), 2));
+            Math.pow(Math.abs(user.getCoordinates()[0] - target.getCoordinates()[0]), 2) +
+            Math.pow(Math.abs(user.getCoordinates()[1] - target.getCoordinates()[1]), 2));
 //    System.out.println("Distance is : " + distance); // Debugging line
     if (distance <= 100) weight += 20; // 20% for close coordinates
     return weight;
   }
 
+  /**
+   * Gets adjacency list.
+   *
+   * @return the adjacency list
+   */
   public Map<Person, List<Edge>> getAdjacencyList() {
     return adjacencyList;
   }
 
-// Dfs approach
-  private boolean dfs(Person person) {
+  /**
+   * Dfs boolean.
+   *
+   * @param person the person
+   * @return the boolean
+   */
+  public boolean dfs(Person person) {
     // checks if the person has already been visited
     if (visited.getOrDefault(person, false)) {
       return false;
@@ -77,8 +107,11 @@ public class BipartiteMatching {
     return false; // No match found or possible
   }
 
-  //  Bipartite matching via Shortest Augmenting Path (SAP) Algorithm
-  public void executeSAP() {
+
+  /**
+   * Execute algorithm.
+   */
+  public void bipartiteMatching() {
     match = new HashMap<>();
     visited = new HashMap<>();
 
@@ -97,6 +130,4 @@ public class BipartiteMatching {
     } while (changed); // Continue while improvements are made
 
   }
-
-
 }
