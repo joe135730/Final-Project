@@ -15,8 +15,9 @@ import People.Person;
  */
 public class Filter implements IFilter {
   private Map<String, List<Person>> dp = new HashMap<>();
+
   /**
-   * Add prefer candidates male method
+   * Add Prefer Candidates Male method
    * Attributes: input List of male and list of female from Person object
    */
   @Override
@@ -34,7 +35,7 @@ public class Filter implements IFilter {
   }
 
   /**
-   * Add prefer candidates female method
+   * Add Prefer Candidates Female method
    * Attributes: input List of male and list of female from Person object
    */
   public void addPreferCandidatesFemale(List<Person> males, List<Person> females) {
@@ -52,8 +53,9 @@ public class Filter implements IFilter {
   }
 
   /**
-   * Group attributes method
+   * Group Attributes method
    * Attributes: input List of people from Person object
+   * This method is to group people by their attributes.
    */
   public Map<String, List<Person>> groupAttributes(List<Person> people) {
     //  key: a string to concatenation these attributes
@@ -64,14 +66,11 @@ public class Filter implements IFilter {
                     person.getRelationshipGoal()
     ));
   }
-  //only matches with a specific edu rank -- match with the same or higher rank
-  //for (int eduRank = interestEducationRank; eduRank <= EducationLevel.values().length; eduRank++) {
 
   /**
-   * Find matches method
-   * Attributes: input List of group from Person object, person from the Person object
-   * This method is to filter the group by age, ethnicity, education, and relationship goal
-   * and return the prefer matches.
+   * Generate method
+   * Attributes: input person from the Person object
+   * This method is to generate a key based on person's preference
    */
   public String generate(Person person) {
     String interestEthnicity = person.getInterestEthnicity();
@@ -84,10 +83,16 @@ public class Filter implements IFilter {
     int minAge = person.getInterestAge()[0];
     int maxAge = person.getInterestAge()[1];
 
-      //  Constructs the key from the map based on the current age and the male's preferences
+    //  Constructs the key from the map based on the current age and the male's preferences
     return minAge + "-" + maxAge + "-" + interestEthnicity + "-" + interestEducationRank + "-" + interestRelationshipGoal;
   }
 
+  /**
+   * Find Matches method
+   * Attributes: input List of group from Person object, person from the Person object
+   * This method is to filter the group (by age, ethnicity, education, and relationship goal)
+   * to find people in other group that match the person's preferences and return the prefer matches .
+   */
   public List<Person> findMatches(Person person, Map<String, List<Person>> group) {
     //  initializes an empty list to store person that match the current preferences
     List<Person> preferMatch = new ArrayList<>();
@@ -101,7 +106,6 @@ public class Filter implements IFilter {
     int minAge = person.getInterestAge()[0];
     int maxAge = person.getInterestAge()[1];
 
-    //List<String> key = new ArrayList<>(); //  precompute the possible key and store in list
     for (int age = minAge; age <= maxAge; age++) {
       //  Constructs the key from the map based on the current age and the male's preferences
       String key = age + "-" + interestEthnicity + "-" + interestEducationRank + "-" + interestRelationshipGoal;
