@@ -1,6 +1,7 @@
 package Algorithm;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -13,7 +14,7 @@ import People.Person;
  * This method is to filter the group by age, ethnicity, education, and relationship goal.
  */
 public class Filter implements IFilter {
-
+  private Map<String, List<Person>> dp = new HashMap<>();
   /**
    * Add prefer candidates male method
    * Attributes: input List of male and list of female from Person object
@@ -23,8 +24,12 @@ public class Filter implements IFilter {
     Map<String, List<Person>> femalesGroup = groupAttributes(females);
 
     for (Person male : males) {
-      List<Person> matches = findMatches(male, femalesGroup);
-      male.setPreferCandidates(matches);
+      String dpKey = generate(male);
+
+      if(!dp.containsKey(dpKey)) {
+        dp.put(dpKey, findMatches(male, femalesGroup));
+      }
+      male.setPreferCandidates(dp.get(dpKey));
     }
   }
 
@@ -37,8 +42,12 @@ public class Filter implements IFilter {
     Map<String, List<Person>> maleGroup = groupAttributes(males);
 
     for(Person female : females){
-      List<Person> matches = findMatches(female, maleGroup);
-      female.setPreferCandidates(matches);
+      String dpKey = generate(female);
+
+      if(!dp.containsKey(dpKey)) {
+        dp.put(dpKey, findMatches(female, maleGroup));
+      }
+      female.setPreferCandidates(dp.get(dpKey));
     }
   }
 
@@ -64,27 +73,41 @@ public class Filter implements IFilter {
    * This method is to filter the group by age, ethnicity, education, and relationship goal
    * and return the prefer matches.
    */
-  public List<Person> findMatches(Person person, Map<String, List<Person>> group) {
-    //  initializes an empty list to store person that match the current preferences
-    List<Person> preferMatch = new ArrayList<>();
-
-    //  extract the minimum and maximum ages that person is interested in from an array
-    int minAge = person.getInterestAge()[0];
-    int maxAge = person.getInterestAge()[1];
-
+  public String generate(Person person) {
     String interestEthnicity = person.getInterestEthnicity();
 
     //  Converts the person's interest in education level into an ordinal value, representing the level of education
     String interestEducationRank = String.valueOf(EducationLevel.fromString(person.getInterestEducation()).ordinal());
     String interestRelationshipGoal = person.getRelationshipGoal();
 
+    //  extract the minimum and maximum ages that person is interested in from an array
+    int minAge = person.getInterestAge()[0];
+    int maxAge = person.getInterestAge()[1];
+
+      //  Constructs the key from the map based on the current age and the male's preferences
+    return minAge + "-" + maxAge + "-" + interestEthnicity + "-" + interestEducationRank + "-" + interestRelationshipGoal;
+  }
+
+  public List<Person> findMatches(Person person, Map<String, List<Person>> group) {
+    //  initializes an empty list to store person that match the current preferences
+    List<Person> preferMatch = new ArrayList<>();
+    String interestEthnicity = person.getInterestEthnicity();
+
+    //  Converts the person's interest in education level into an ordinal value, representing the level of education
+    String interestEducationRank = String.valueOf(EducationLevel.fromString(person.getInterestEducation()).ordinal());
+    String interestRelationshipGoal = person.getRelationshipGoal();
+
+    //  extract the minimum and maximum ages that person is interested in from an array
+    int minAge = person.getInterestAge()[0];
+    int maxAge = person.getInterestAge()[1];
+
+    //List<String> key = new ArrayList<>(); //  precompute the possible key and store in list
     for (int age = minAge; age <= maxAge; age++) {
       //  Constructs the key from the map based on the current age and the male's preferences
-      String attributeKey = age + "-" + interestEthnicity + "-" + interestEducationRank + "-" + interestRelationshipGoal;
-      if (group.containsKey(attributeKey)) {
-        preferMatch.addAll(group.get(attributeKey));
-      }
+      String key = age + "-" + interestEthnicity + "-" + interestEducationRank + "-" + interestRelationshipGoal;
+      preferMatch.addAll(group.getOrDefault(key, new ArrayList<>()));
     }
     return preferMatch;
   }
+
 }

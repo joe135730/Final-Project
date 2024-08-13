@@ -25,13 +25,13 @@ public class Algorithm {
       System.out.println("ID: " + male.getId() + "\n" +
               "Name: " + male.getName() + "\n" +
               "Age: " + male.getAge() + "\n" +
-              "InterestAge: Min: " + male.getInterestAge()[0] + ", Max: " + male.getInterestAge()[1] +"\n" +
               "Sex: " + male.getSex() + "\n" +
               "Interest: " + male.getInterest() + "\n" +
               "Ethnicity: " + male.getEthnicity() + "\n" +
-              "Interest Ethnicity: " + male.getInterestEthnicity() + "\n" +
               "Religion: " + male.getReligion() + "\n" +
               "Education: " + male.getEducation() + "\n" +
+              "InterestAge: Min: " + male.getInterestAge()[0] + ", Max: " + male.getInterestAge()[1] +"\n" +
+              "Interest Ethnicity: " + male.getInterestEthnicity() + "\n" +
               "Interest Education: " + male.getInterestEducation() + "\n" +
               "Relationship Goal: " + male.getRelationshipGoal() + "\n" +
               "Coordinates: x: " + male.getCoordinates()[0] +
