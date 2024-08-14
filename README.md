@@ -1,13 +1,14 @@
-# Project Name
+# CS5800 Final Project Group 6
 
 ## Description
 
-Provide a brief description of what your project does and its purpose.
+This is Group 6's project.
 
 ## Prerequisites
 
 Before you run this project, you need to have the following installed:
 - Java Development Kit (JDK) - This project is compatible with OpenJDK 22.
+- Gson Library via Maven - com.google.code.gson:gson:2.8.9
 
 ## Installation
 
@@ -30,7 +31,7 @@ java -version
 You should see output indicating that you are running OpenJDK version 22.
 
 
-### Step 4: Configuring Libraries
-### Add Gson Library via Maven
+### Step 3: Configuring Libraries
+Add Gson Library via Maven
 - For IntelliJ: File -> Project Structures -> Libraries -> + (New Project Library) -> From Maven
 -> Search "com.google.code.gson:gson:2.8.9" -> Click ok to apply
