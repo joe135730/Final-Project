@@ -39,6 +39,7 @@ Replication::Replication(const std::string& selfId, const ClusterConfig& cfg)
 
 void Replication::startLeader(ApplyFn apply) {
     apply_fn_ = std::move(apply);
+    follower_apply_fn_ = apply_fn_;
     raft_->startLeader();
 }
 
