@@ -1,6 +1,10 @@
 #include "server/MainServer.h"
 
 #include <chrono>
+#include <cctype>
+#include <fstream>
+#include <map>
+#include <sstream>
 #include <stdexcept>
 #include <thread>
 
@@ -70,6 +74,45 @@ void MainServer::stop() {
 }
 
 void MainServer::serveHttp_() {
+    auto addCors = [](httplib::Response& res) {
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.set_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        res.set_header("Access-Control-Allow-Headers", "Content-Type");
+    };
+
+    http_.Options(R"(/.*)", [addCors](const httplib::Request&, httplib::Response& res) {
+        addCors(res);
+        res.status = 200;
+    });
+
+    http_.Get("/", [this, addCors](const httplib::Request&, httplib::Response& res) {
+        addCors(res);
+        if (!serveStaticFile_(staticRoot_ + "/index.html", res)) {
+            res.status = 404;
+            res.set_content("Dashboard not found", "text/plain");
+        }
+    });
+
+    http_.Get(R"(/static/(.*))", [this, addCors](const httplib::Request& req, httplib::Response& res) {
+        addCors(res);
+        if (req.matches.size() < 2) {
+            res.status = 404;
+            res.set_content("Not found", "text/plain");
+            return;
+        }
+        std::string rel = req.matches[1];
+        if (rel.find("..") != std::string::npos) {
+            res.status = 403;
+            res.set_content("Forbidden", "text/plain");
+            return;
+        }
+        std::string path = staticRoot_ + "/static/" + rel;
+        if (!serveStaticFile_(path, res)) {
+            res.status = 404;
+            res.set_content("Not found", "text/plain");
+        }
+    });
+
     http_.Post("/ingest", [this](const httplib::Request& req, httplib::Response& res) {
         try {
             auto body = nlohmann::json::parse(req.body);
@@ -106,10 +149,12 @@ void MainServer::serveHttp_() {
                 {"index", idx},
                 {"term", repl_.term()}
             };
+            res.set_header("Access-Control-Allow-Origin", "*");
             res.status = 200;
             res.set_content(response.dump(), "application/json");
         } catch (const std::exception& ex) {
             res.status = 400;
+            res.set_header("Access-Control-Allow-Origin", "*");
             res.set_content(std::string(R"({"error":")") + ex.what() + "\"}", "application/json");
         }
     });
@@ -120,10 +165,12 @@ void MainServer::serveHttp_() {
             auto entry = opLogEntryFromJson(body);
             repl_.applyRemote(entry);
             agg_.add(entry.payload);
+            res.set_header("Access-Control-Allow-Origin", "*");
             res.status = 200;
             res.set_content(R"({"status":"ok"})", "application/json");
         } catch (const std::exception& ex) {
             res.status = 400;
+            res.set_header("Access-Control-Allow-Origin", "*");
             res.set_content(std::string(R"({"error":")") + ex.what() + "\"}", "application/json");
         }
     });
@@ -132,10 +179,12 @@ void MainServer::serveHttp_() {
         auto road = req.get_param_value("road");
         RoadSnapshot snap;
         if (!agg_.get(road, snap)) {
+            res.set_header("Access-Control-Allow-Origin", "*");
             res.status = 404;
             res.set_content(R"({"error":"road not found"})", "application/json");
             return;
         }
+        res.set_header("Access-Control-Allow-Origin", "*");
         res.status = 200;
         res.set_content(snap.toJson().dump(), "application/json");
     });
@@ -146,6 +195,7 @@ void MainServer::serveHttp_() {
         for (const auto& s : list) {
             arr.push_back(s.toJson());
         }
+        res.set_header("Access-Control-Allow-Origin", "*");
         res.status = 200;
         res.set_content(arr.dump(), "application/json");
     });
@@ -155,6 +205,7 @@ void MainServer::serveHttp_() {
         st.term = repl_.term();
         st.last_index = repl_.lastIndex();
         st.summary = agg_.summary();
+        res.set_header("Access-Control-Allow-Origin", "*");
         res.status = 200;
         res.set_content(st.toJson().dump(), "application/json");
     });
@@ -189,6 +240,49 @@ bool MainServer::isLeaderFor(int shardId) const {
     auto it = cfg_.shards.find(shardId);
     if (it == cfg_.shards.end()) return false;
     return it->second.leader == selfId_ && asLeader_;
+}
+
+bool MainServer::serveStaticFile_(const std::string& relPath, httplib::Response& res) const {
+    std::ifstream in(relPath.c_str(), std::ios::binary);
+    if (!in) {
+        return false;
+    }
+    std::ostringstream ss;
+    ss << in.rdbuf();
+    std::string body = ss.str();
+    std::string mime = guessMime_(relPath);
+    res.status = 200;
+    res.set_content(body, mime.c_str());
+    return true;
+}
+
+std::string MainServer::guessMime_(const std::string& path) {
+    static std::map<std::string, std::string> table;
+    if (table.empty()) {
+        table["html"] = "text/html; charset=utf-8";
+        table["htm"] = "text/html; charset=utf-8";
+        table["js"] = "application/javascript; charset=utf-8";
+        table["css"] = "text/css; charset=utf-8";
+        table["json"] = "application/json; charset=utf-8";
+        table["png"] = "image/png";
+        table["jpg"] = "image/jpeg";
+        table["jpeg"] = "image/jpeg";
+        table["svg"] = "image/svg+xml";
+        table["txt"] = "text/plain; charset=utf-8";
+    }
+    std::string ext;
+    size_t dot = path.find_last_of('.');
+    if (dot != std::string::npos && dot + 1 < path.size()) {
+        ext = path.substr(dot + 1);
+        for (size_t i = 0; i < ext.size(); ++i) {
+            ext[i] = static_cast<char>(std::tolower(ext[i]));
+        }
+    }
+    std::map<std::string, std::string>::const_iterator it = table.find(ext);
+    if (it != table.end()) {
+        return it->second;
+    }
+    return "application/octet-stream";
 }
 
 

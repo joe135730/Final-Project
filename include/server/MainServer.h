@@ -20,6 +20,8 @@ private:
     void aggLoop_();            // recompute every 1s
     OpLogEntry makeEntry_(const TrafficReport& r, int shardId);
     bool isLeaderFor(int shardId) const;
+    bool serveStaticFile_(const std::string& relPath, httplib::Response& res) const;
+    static std::string guessMime_(const std::string& path);
 
     std::string selfId_;
     ClusterConfig cfg_;
@@ -32,4 +34,5 @@ private:
     Aggregator agg_;
     std::atomic<bool> running_{false};
     std::thread aggThread_;
+    std::string staticRoot_{"dashboard"};
 };

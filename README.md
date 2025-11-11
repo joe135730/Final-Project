@@ -18,45 +18,37 @@ This project simulates a sharded, replicated traffic monitoring system built for
 ## Build
 
 ```bash
-make -j
+make server    # build only the cluster binary
+make client    # build only the sensor binary
+make           # build both
 ```
 
 Executables are written to `bin/server` and `bin/sensor`.
 
 ## Run Example
 
-Terminal 1:
+1. Start three servers (one per node) in separate terminals:
 
-```bash
-./bin/server --id srv-1 --host 127.0.0.1 --http 5000 --cluster config/cluster.json --leader
-```
+    ```bash
+    ./bin/server --id srv-1 --host 127.0.0.1 --http 5000 --cluster config/cluster.json --leader
+    ./bin/server --id srv-2 --host 127.0.0.1 --http 5001 --cluster config/cluster.json
+    ./bin/server --id srv-3 --host 127.0.0.1 --http 5002 --cluster config/cluster.json
+    ```
 
-Terminal 2:
+2. Launch simulated sensors (e.g. five virtual intersections reporting twice per second):
 
-```bash
-./bin/server --id srv-2 --host 127.0.0.1 --http 5001 --cluster config/cluster.json
-```
+    ```bash
+    ./bin/sensor --id sensorA --server 127.0.0.1:5000 --count 5 --interval 500
+    ```
 
-Terminal 3:
+3. Open the realtime dashboard in a browser:
 
-```bash
-./bin/server --id srv-3 --host 127.0.0.1 --http 5002 --cluster config/cluster.json
-```
+    ```
+    http://127.0.0.1:5000/
+    ```
 
-Terminal 4 (sensor load generator):
+    The canvas map paints each road segment (green / yellow / red) and animates vehicle icons based on the most recent 5‑second flow. The metrics panel lists per-road statistics and cluster status.
 
-```bash
-./bin/sensor --id sensorA --server 127.0.0.1:5000 --count 5 --interval 500
-```
-
-Query summaries:
-
-```bash
-curl http://127.0.0.1:5000/summary | jq
-curl "http://127.0.0.1:5000/data?road=Main_St" | jq
-curl http://127.0.0.1:5000/status | jq
-```
-
-Use `Ctrl+C` in each terminal to stop processes gracefully.
+REST endpoints remain available for scripting/validation (`/summary`, `/data?road=...`, `/status`). Use `Ctrl+C` in each terminal to stop processes gracefully.
 
 

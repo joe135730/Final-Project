@@ -18,6 +18,7 @@ public:
 
     void Get(const std::string& path, Handler handler);
     void Post(const std::string& path, Handler handler);
+    void Options(const std::string& path, Handler handler);
 
     bool start(const std::string& host, int port);
     void stop();

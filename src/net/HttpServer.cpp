@@ -19,6 +19,10 @@ void HttpServer::Post(const std::string& path, Handler handler) {
     server_->Post(path.c_str(), handler);
 }
 
+void HttpServer::Options(const std::string& path, Handler handler) {
+    server_->Options(path.c_str(), handler);
+}
+
 bool HttpServer::start(const std::string& host, int port) {
     if (running_.exchange(true)) {
         return false;
