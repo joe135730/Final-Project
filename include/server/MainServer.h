@@ -2,9 +2,9 @@
 #include <atomic>
 #include <thread>
 
-#include "ShardRouter.h"
-#include "Replication.h"
-#include "Aggregator.h"
+#include "shard/ShardRouter.h"
+#include "repl/Replication.h"
+#include "agg/Aggregator.h"
 #include "net/HttpServer.h"
 #include "server/Status.h"
 #include "types/ShardTypes.h"

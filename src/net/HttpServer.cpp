@@ -5,7 +5,7 @@
 #include <stdexcept>
 
 HttpServer::HttpServer()
-    : server_(std::make_unique<httplib::Server>()) {}
+    : server_(std::unique_ptr<httplib::Server>(new httplib::Server())) {}
 
 HttpServer::~HttpServer() {
     stop();

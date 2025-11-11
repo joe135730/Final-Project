@@ -25,8 +25,9 @@ MainServer::MainServer(const std::string& selfId,
 
 namespace {
 bool hasLeadership(const ClusterConfig& cfg, const std::string& nodeId) {
-    for (const auto& [id, shard] : cfg.shards) {
-        if (shard.leader == nodeId) {
+    for (ShardMap::const_iterator it = cfg.shards.begin();
+         it != cfg.shards.end(); ++it) {
+        if (it->second.leader == nodeId) {
             return true;
         }
     }
@@ -164,11 +165,10 @@ void MainServer::serveHttp_() {
 }
 
 void MainServer::aggLoop_() {
-    using namespace std::chrono_literals;
     while (running_.load()) {
-        auto now = nowMs();
+        long now = nowMs();
         agg_.recompute(now);
-        std::this_thread::sleep_for(1s);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 }
 

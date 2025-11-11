@@ -8,6 +8,10 @@
 #include "util/Logger.h"
 #include "repl/RaftLite.h"
 
+void RaftLiteDeleter::operator()(RaftLite* ptr) const {
+    delete ptr;
+}
+
 nlohmann::json opLogEntryToJson(const OpLogEntry& e) {
     return {
         {"index", e.index},
@@ -31,7 +35,7 @@ OpLogEntry opLogEntryFromJson(const nlohmann::json& j) {
 Replication::Replication(const std::string& selfId, const ClusterConfig& cfg)
     : self_id_(selfId),
       cfg_(cfg),
-      raft_(std::make_unique<RaftLite>(*this)) {}
+      raft_(std::unique_ptr<RaftLite, RaftLiteDeleter>(new RaftLite(*this))) {}
 
 void Replication::startLeader(ApplyFn apply) {
     apply_fn_ = std::move(apply);

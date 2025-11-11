@@ -52,10 +52,9 @@ void RaftLite::applyRemote(const OpLogEntry& entry) {
 }
 
 void RaftLite::heartbeatLoop_() {
-    using namespace std::chrono_literals;
     while (running_.load()) {
         std::unique_lock<std::mutex> lk(mtx_);
-        cv_.wait_for(lk, 2s);
+        cv_.wait_for(lk, std::chrono::seconds(2));
         if (!running_.load()) break;
         if (is_leader_.load()) {
             Logger::instance().debug("Heartbeat term=" + std::to_string(term_.load()));

@@ -6,8 +6,8 @@
 #include "util/Time.h"
 
 namespace {
-constexpr long WINDOW5_MS = 5'000;
-constexpr long WINDOW60_MS = 60'000;
+const long WINDOW5_MS = 5000;
+const long WINDOW60_MS = 60000;
 }
 
 void Aggregator::add(const TrafficReport& r) {
@@ -21,7 +21,9 @@ void Aggregator::add(const TrafficReport& r) {
 
 void Aggregator::recompute(long now_ms) {
     std::lock_guard<std::mutex> g(mtx_);
-    for (auto& [road, window] : win_) {
+    for (auto& kv : win_) {
+        const std::string& road = kv.first;
+        Window& window = kv.second;
         while (!window.w5s.empty() && now_ms - window.w5s.front().timestamp_ms > WINDOW5_MS) {
             window.w5s.pop_front();
         }
@@ -61,8 +63,8 @@ std::vector<RoadSnapshot> Aggregator::summary(size_t topN) const {
     std::lock_guard<std::mutex> g(mtx_);
     std::vector<RoadSnapshot> v;
     v.reserve(last_.size());
-    for (const auto& [road, snap] : last_) {
-        v.push_back(snap);
+    for (const auto& kv : last_) {
+        v.push_back(kv.second);
     }
     std::sort(v.begin(), v.end(), [](const RoadSnapshot& a, const RoadSnapshot& b) {
         if (a.classification == b.classification) {

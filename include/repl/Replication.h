@@ -10,6 +10,9 @@
 #include "types/TrafficReport.h"
 
 class RaftLite;
+struct RaftLiteDeleter {
+    void operator()(RaftLite* ptr) const;
+};
 
 struct OpLogEntry {
     long index;
@@ -43,7 +46,7 @@ private:
     ClusterConfig cfg_;
     ApplyFn apply_fn_;
     ApplyFn follower_apply_fn_;
-    std::unique_ptr<RaftLite> raft_;
+    std::unique_ptr<RaftLite, RaftLiteDeleter> raft_;
     mutable std::mutex mtx_;
     std::vector<OpLogEntry> log_;
 };
