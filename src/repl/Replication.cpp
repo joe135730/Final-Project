@@ -72,15 +72,22 @@ long Replication::appendAndReplicate(const OpLogEntry& e) {
         for (const auto& followerId : shardIt->second.followers) {
             if (followerId == self_id_) continue;
             auto node = cfg_.findNode(followerId);
-            if (!node) continue;
+            if (!node) {
+                Logger::instance().warn("Replication: follower node not found: " + followerId);
+                continue;
+            }
             try {
                 HttpClient cli(node->host, node->http_port);
                 nlohmann::json resp;
                 if (!cli.postJson("/ingest_internal", opLogEntryToJson(entry), &resp)) {
-                    Logger::instance().warn("Replication failed to follower " + followerId);
+                    Logger::instance().warn("Replication failed to follower " + followerId + 
+                                           " at " + node->host + ":" + std::to_string(node->http_port) +
+                                           " (connection refused or HTTP error)");
                 }
             } catch (const std::exception& ex) {
-                Logger::instance().warn("Replication exception to follower " + followerId + ": " + ex.what());
+                Logger::instance().warn("Replication exception to follower " + followerId + 
+                                      " at " + node->host + ":" + std::to_string(node->http_port) + 
+                                      ": " + ex.what());
             }
         }
     }

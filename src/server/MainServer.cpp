@@ -162,6 +162,9 @@ void MainServer::serveHttp_() {
     if (!http_.start(host_, httpPort_)) {
         throw std::runtime_error("HTTP server already running");
     }
+    // Give HTTP server time to bind to port before accepting connections
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    Logger::instance().info("HTTP server ready on " + host_ + ":" + std::to_string(httpPort_));
 }
 
 void MainServer::aggLoop_() {

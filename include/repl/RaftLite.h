@@ -26,7 +26,7 @@ public:
 private:
     void heartbeatLoop_();
 
-    Replication& parent_;
+    Replication& parent_;  // Reserved for future use (e.g., accessing parent config)
     std::atomic<bool> running_{false};
     std::atomic<bool> is_leader_{false};
     std::atomic<long> term_{1};

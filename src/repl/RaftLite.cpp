@@ -6,7 +6,9 @@
 #include "util/Logger.h"
 
 RaftLite::RaftLite(Replication& parent)
-    : parent_(parent) {}
+    : parent_(parent) {
+    (void)parent_;  // Suppress unused warning - reserved for future use
+}
 
 RaftLite::~RaftLite() {
     stop();
