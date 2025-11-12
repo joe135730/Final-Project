@@ -6,8 +6,8 @@
 #include "util/Time.h"
 
 namespace {
-const long WINDOW5_MS = 5000;
-const long WINDOW60_MS = 60000;
+const long WINDOW5_MS = 3000;
+const long WINDOW60_MS = 10000;
 }
 
 void Aggregator::add(const TrafficReport& r) {
