@@ -35,6 +35,10 @@ private:
     std::vector<std::thread> workers_;
     std::mt19937 rng_;
     HttpClient client_;
+    
+    // Failover servers (try these if primary fails)
+    std::vector<std::pair<std::string, int>> failover_servers_;
+    bool trySendWithFailover(const nlohmann::json& body);
 };
 
 

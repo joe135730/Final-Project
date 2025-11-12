@@ -16,7 +16,14 @@ SensorRunner::SensorRunner(std::string id,
       roads_(std::move(roads)),
       interval_ms_(interval_ms),
       rng_(std::random_device{}()),
-      client_(server_host_, server_port_) {}
+      client_(server_host_, server_port_) {
+    // Set up failover servers (common ports for local testing)
+    // Try primary first, then 5001, 5002, 5003
+    failover_servers_.push_back({server_host_, server_port_});
+    if (server_port_ != 5001) failover_servers_.push_back({server_host_, 5001});
+    if (server_port_ != 5002) failover_servers_.push_back({server_host_, 5002});
+    if (server_port_ != 5003) failover_servers_.push_back({server_host_, 5003});
+}
 
 SensorRunner::~SensorRunner() {
     stop();
@@ -51,9 +58,24 @@ void SensorRunner::loop_(int idx) {
         report.avg_speed_kmh = speed_dist(rng_);
         auto body = report.toJson();
         body["sensor_id"] = id_ + "-" + std::to_string(idx);
-        client_.postJson("/ingest", body, nullptr);
+        
+        // Try sending with failover
+        if (!trySendWithFailover(body)) {
+            // All servers failed, log but continue
+        }
+        
         std::this_thread::sleep_for(std::chrono::milliseconds(interval_ms_));
     }
+}
+
+bool SensorRunner::trySendWithFailover(const nlohmann::json& body) {
+    for (const auto& server : failover_servers_) {
+        HttpClient cli(server.first, server.second);
+        if (cli.postJson("/ingest", body, nullptr, 500)) {
+            return true;  // Success
+        }
+    }
+    return false;  // All servers failed
 }
 
 TrafficReport SensorRunner::makeReport_(const std::string& road) {
