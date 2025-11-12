@@ -13,6 +13,7 @@ public:
     void recompute(long now_ms);         // 1 Hz
     bool get(const std::string& road, RoadSnapshot& out) const;
     std::vector<RoadSnapshot> summary(size_t topN=20) const;
+    void seedRoad(const std::string& road);  // Initialize road with empty state
 private:
     struct Window { std::deque<TrafficReport> w5s, w60s; double ewma=0; long last_ts=0; };
     mutable std::mutex mtx_;

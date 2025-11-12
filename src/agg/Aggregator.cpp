@@ -19,6 +19,26 @@ void Aggregator::add(const TrafficReport& r) {
     win.ewma = win.ewma == 0 ? r.avg_speed_kmh : 0.7 * win.ewma + 0.3 * r.avg_speed_kmh;
 }
 
+void Aggregator::seedRoad(const std::string& road) {
+    std::lock_guard<std::mutex> g(mtx_);
+    // Initialize window if it doesn't exist
+    if (win_.find(road) == win_.end()) {
+        win_[road] = Window();
+    }
+    // Initialize snapshot with "No Data" state if it doesn't exist
+    if (last_.find(road) == last_.end()) {
+        RoadSnapshot snap;
+        snap.road = road;
+        snap.last_report_ms = 0;
+        snap.cars_5s = 0;
+        snap.cars_60s = 0;
+        snap.avg_speed_kmh = 0.0;
+        snap.ewma_speed_kmh = 0.0;
+        snap.classification = "UNKNOWN";
+        last_[road] = snap;
+    }
+}
+
 void Aggregator::recompute(long now_ms) {
     std::lock_guard<std::mutex> g(mtx_);
     for (auto& kv : win_) {

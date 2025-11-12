@@ -18,6 +18,7 @@ public:
 private:
     void serveHttp_();          // /ingest, /ingest_internal, /data, /summary, /status
     void aggLoop_();            // recompute every 1s
+    void failoverLoop_();        // check for leader failures and promote followers
     OpLogEntry makeEntry_(const TrafficReport& r, int shardId);
     bool isLeaderFor(int shardId) const;
     bool isFollowerFor(int shardId) const;
@@ -36,5 +37,6 @@ private:
     Aggregator agg_;
     std::atomic<bool> running_{false};
     std::thread aggThread_;
+    std::thread failoverThread_;
     std::string staticRoot_{"dashboard"};
 };

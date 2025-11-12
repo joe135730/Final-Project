@@ -5,15 +5,19 @@
 #include <cctype>
 #include <fstream>
 #include <map>
+#include <mutex>
 #include <sstream>
 #include <stdexcept>
 #include <thread>
+#include <unordered_map>
+#include <vector>
 
 #include <nlohmann/json.hpp>
 
 #include "util/Logger.h"
 #include "util/Time.h"
 #include "net/HttpClient.h"
+#include "util/JsonIO.h"
 
 MainServer::MainServer(const std::string& selfId,
                        const ClusterConfig& cfg,
@@ -59,8 +63,20 @@ void MainServer::start() {
         });
     }
 
+    // Seed aggregator with all known roads from config
+    try {
+        auto roads = JsonIO::loadRoadList("config/roads.json");
+        for (const auto& road : roads) {
+            agg_.seedRoad(road);
+        }
+        Logger::instance().info("Seeded " + std::to_string(roads.size()) + " roads into aggregator");
+    } catch (const std::exception& ex) {
+        Logger::instance().warn("Failed to seed roads: " + std::string(ex.what()));
+    }
+
     serveHttp_();
     aggThread_ = std::thread([this]() { aggLoop_(); });
+    failoverThread_ = std::thread([this]() { failoverLoop_(); });
 }
 
 void MainServer::stop() {
@@ -70,6 +86,9 @@ void MainServer::stop() {
     http_.stop();
     if (aggThread_.joinable()) {
         aggThread_.join();
+    }
+    if (failoverThread_.joinable()) {
+        failoverThread_.join();
     }
     repl_.stop();
 }
@@ -232,6 +251,110 @@ void MainServer::serveHttp_() {
         res.set_content(st.toJson().dump(), "application/json");
     });
 
+    // Sync endpoint: followers can request full data snapshot from leader
+    http_.Get("/sync", [this](const httplib::Request&, httplib::Response& res) {
+        auto list = agg_.summary(1000); // Get all roads, not just top 20
+        nlohmann::json arr = nlohmann::json::array();
+        for (const auto& s : list) {
+            arr.push_back(s.toJson());
+        }
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.status = 200;
+        res.set_content(arr.dump(), "application/json");
+    });
+
+    // Aggregated summary: merge data from all peers for unified dashboard view
+    http_.Get("/summary_all", [this](const httplib::Request&, httplib::Response& res) {
+        std::unordered_map<std::string, RoadSnapshot> merged;
+        
+        // Start with local data
+        auto localList = agg_.summary(1000);
+        for (const auto& snap : localList) {
+            merged[snap.road] = snap;
+        }
+        
+        // Query all other nodes in parallel
+        std::vector<std::thread> threads;
+        std::mutex mergeMtx;
+        
+        for (const auto& nodePair : cfg_.nodes) {
+            const auto& node = nodePair.second;
+            if (node.id == selfId_) continue; // Skip self
+            
+            threads.emplace_back([&node, &merged, &mergeMtx]() {
+                try {
+                    HttpClient cli(node.host, node.http_port);
+                    nlohmann::json peerData;
+                    if (cli.getJson("/summary", &peerData, 1000)) {
+                        if (peerData.is_array()) {
+                            std::lock_guard<std::mutex> lock(mergeMtx);
+                            for (const auto& snapJson : peerData) {
+                                try {
+                                    RoadSnapshot snap = RoadSnapshot::fromJson(snapJson);
+                                    // Merge: prefer data with more recent timestamp or non-UNKNOWN classification
+                                    auto it = merged.find(snap.road);
+                                    if (it == merged.end()) {
+                                        merged[snap.road] = snap;
+                                    } else {
+                                        // Prefer snapshot with data over UNKNOWN
+                                        if (snap.classification != "UNKNOWN" && 
+                                            it->second.classification == "UNKNOWN") {
+                                            it->second = snap;
+                                        } else if (snap.last_report_ms > it->second.last_report_ms) {
+                                            // Prefer more recent data
+                                            it->second = snap;
+                                        }
+                                    }
+                                } catch (const std::exception& ex) {
+                                    // Skip invalid entries
+                                }
+                            }
+                        }
+                    }
+                } catch (const std::exception& ex) {
+                    // Node unavailable, skip
+                }
+            });
+        }
+        
+        // Wait for all threads
+        for (auto& t : threads) {
+            if (t.joinable()) {
+                t.join();
+            }
+        }
+        
+        // Convert merged map to array
+        std::vector<RoadSnapshot> result;
+        result.reserve(merged.size());
+        for (const auto& kv : merged) {
+            result.push_back(kv.second);
+        }
+        
+        // Sort by classification priority, then by traffic
+        std::sort(result.begin(), result.end(), [](const RoadSnapshot& a, const RoadSnapshot& b) {
+            if (a.classification == b.classification) {
+                return a.cars_60s > b.cars_60s;
+            }
+            auto rank = [](const std::string& cls) {
+                if (cls == "CONGESTED") return 0;
+                if (cls == "MODERATE") return 1;
+                if (cls == "SMOOTH") return 2;
+                return 3; // UNKNOWN/STALE
+            };
+            return rank(a.classification) < rank(b.classification);
+        });
+        
+        nlohmann::json arr = nlohmann::json::array();
+        for (const auto& s : result) {
+            arr.push_back(s.toJson());
+        }
+        
+        res.set_header("Access-Control-Allow-Origin", "*");
+        res.status = 200;
+        res.set_content(arr.dump(), "application/json");
+    });
+
     if (!http_.start(host_, httpPort_)) {
         throw std::runtime_error("HTTP server already running");
     }
@@ -245,6 +368,58 @@ void MainServer::aggLoop_() {
         long now = nowMs();
         agg_.recompute(now);
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
+}
+
+void MainServer::failoverLoop_() {
+    // Check every 5 seconds for leader failures
+    while (running_.load()) {
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+        
+        if (!running_.load()) break;
+        
+        // Check each shard where we're a follower
+        for (const auto& shardPair : cfg_.shards) {
+            int shardId = shardPair.first;
+            const auto& shard = shardPair.second;
+            
+            // Skip if we're already the leader for this shard
+            if (isLeaderFor(shardId)) {
+                continue;
+            }
+            
+            // Check if we're a follower for this shard
+            if (!isFollowerFor(shardId)) {
+                continue;
+            }
+            
+            // Check if the configured leader is reachable
+            const std::string& leaderId = shard.leader;
+            auto leaderNode = cfg_.findNode(leaderId);
+            if (!leaderNode) {
+                continue;
+            }
+            
+            // Try to ping the leader
+            bool leaderAlive = false;
+            try {
+                HttpClient cli(leaderNode->host, leaderNode->http_port);
+                nlohmann::json resp;
+                if (cli.getJson("/status", &resp, 2000)) {
+                    leaderAlive = true;
+                }
+            } catch (const std::exception& ex) {
+                // Leader is down
+            }
+            
+            // If leader is down and we're a follower, promote ourselves
+            if (!leaderAlive) {
+                Logger::instance().info("Leader " + leaderId + " for shard " + 
+                                       std::to_string(shardId) + " appears down, promoting " + 
+                                       selfId_ + " to leader");
+                promoteToLeaderFor(shardId);
+            }
+        }
     }
 }
 
@@ -288,6 +463,41 @@ void MainServer::promoteToLeaderFor(int shardId) {
     // Check if we're a follower for this shard
     if (!isFollowerFor(shardId)) {
         return;
+    }
+    
+    // Before promoting, try to sync missing data from the original leader
+    const auto& leaderId = cfg_.shards.at(shardId).leader;
+    auto leaderNode = cfg_.findNode(leaderId);
+    if (leaderNode && leaderId != selfId_) {
+        // Try to sync data from the original leader
+        try {
+            HttpClient cli(leaderNode->host, leaderNode->http_port);
+            nlohmann::json syncData;
+            if (cli.getJson("/sync", &syncData, 2000)) {
+                // Update aggregator with synced data
+                if (syncData.is_array()) {
+                    int syncedCount = 0;
+                    for (const auto& snapJson : syncData) {
+                        try {
+                            RoadSnapshot snap = RoadSnapshot::fromJson(snapJson);
+                            // Add to aggregator by creating a TrafficReport from snapshot
+                            TrafficReport report;
+                            report.road = snap.road;
+                            report.timestamp_ms = snap.last_report_ms;
+                            report.vehicle_count = snap.cars_5s > 0 ? snap.cars_5s : snap.cars_60s;
+                            report.avg_speed_kmh = snap.avg_speed_kmh;
+                            agg_.add(report);
+                            syncedCount++;
+                        } catch (const std::exception& ex) {
+                            Logger::instance().warn("Failed to sync road snapshot: " + std::string(ex.what()));
+                        }
+                    }
+                    Logger::instance().info("Synced " + std::to_string(syncedCount) + " roads from leader " + leaderId);
+                }
+            }
+        } catch (const std::exception& ex) {
+            Logger::instance().warn("Failed to sync from leader " + leaderId + ": " + ex.what());
+        }
     }
     
     // Promote to leader mode if not already

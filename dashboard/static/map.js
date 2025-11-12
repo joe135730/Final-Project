@@ -71,7 +71,15 @@ const ctx = canvas.getContext('2d');
 let latestSummary = {};
 
 function fetchSummary() {
-  fetch('/summary', { credentials: 'same-origin' })
+  // Use aggregated endpoint for unified view across all nodes
+  fetch('/summary_all', { credentials: 'same-origin' })
+    .then((resp) => {
+      if (!resp.ok) {
+        // Fallback to local summary if aggregated endpoint fails
+        return fetch('/summary', { credentials: 'same-origin' });
+      }
+      return resp;
+    })
     .then((resp) => {
       if (!resp.ok) {
         throw new Error(`HTTP ${resp.status}`);

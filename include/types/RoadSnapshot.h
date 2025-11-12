@@ -14,6 +14,7 @@ struct RoadSnapshot {
     std::string classification;
 
     nlohmann::json toJson() const;
+    static RoadSnapshot fromJson(const nlohmann::json& j);
 };
 
 
