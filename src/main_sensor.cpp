@@ -2,7 +2,6 @@
 #include <chrono>
 #include <csignal>
 #include <iostream>
-#include <map>
 #include <string>
 #include <thread>
 #include <vector>
@@ -17,48 +16,30 @@ std::atomic<bool> keep_running{true};
 void signalHandler(int) {
     keep_running.store(false);
 }
-
-std::map<std::string, std::string> parseArgs(int argc, char** argv) {
-    std::map<std::string, std::string> out;
-    for (int i = 1; i < argc; ++i) {
-        std::string arg = argv[i];
-        if (arg.rfind("--", 0) == 0) {
-            std::string key = arg.substr(2);
-            std::string value = "true";
-            if (i + 1 < argc && std::string(argv[i + 1]).rfind("--", 0) != 0) {
-                value = argv[++i];
-            }
-            out[key] = value;
-        }
-    }
-    return out;
-}
 }
 
 int main(int argc, char** argv) {
-    auto args = parseArgs(argc, argv);
-
-    if (!args.count("id") || !args.count("server")) {
-        std::cerr << "Usage: sensor --id S1 --server host:port [--roads config/roads.json] "
-                     "[--interval 500] [--count 5]\n";
+    if (argc < 4) {
+        std::cerr << "Usage: sensor <id> <host> <port> [interval_ms] [count]\n";
         return 1;
     }
 
-    std::string id = args["id"];
-    std::string server = args["server"];
-    auto colon = server.find(':');
-    if (colon == std::string::npos) {
-        std::cerr << "--server must be host:port\n";
-        return 1;
+    std::string id = argv[1];
+    std::string host = argv[2];
+    int port = std::stoi(argv[3]);
+
+    int interval = 500;
+    int count = 1;
+
+    if (argc >= 5) {
+        interval = std::stoi(argv[4]);
     }
-    std::string host = server.substr(0, colon);
-    int port = std::stoi(server.substr(colon + 1));
-    std::string roadsPath = args.count("roads") ? args["roads"] : "config/roads.json";
-    int interval = args.count("interval") ? std::stoi(args["interval"]) : 500;
-    int count = args.count("count") ? std::stoi(args["count"]) : 1;
+    if (argc >= 6) {
+        count = std::stoi(argv[5]);
+    }
 
     try {
-        auto roads = JsonIO::loadRoadList(roadsPath);
+        auto roads = JsonIO::loadRoadList("config/roads.json");
         if (roads.empty()) {
             throw std::runtime_error("Road list is empty");
         }
