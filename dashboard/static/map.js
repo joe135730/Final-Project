@@ -2,6 +2,7 @@ const STATUS_COLORS = {
   CONGESTED: '#e74c3c',
   MODERATE: '#f1c40f',
   SMOOTH: '#2ecc71',
+  NO_DATA: '#64748b',
   STALE: '#64748b',
   UNKNOWN: '#64748b'
 };
@@ -10,8 +11,9 @@ const CLASS_PRIORITY = {
   CONGESTED: 0,
   MODERATE: 1,
   SMOOTH: 2,
-  STALE: 3,
-  UNKNOWN: 4
+  NO_DATA: 3,
+  STALE: 4,
+  UNKNOWN: 5
 };
 
 const ROAD_LAYOUT = {
@@ -139,7 +141,7 @@ function drawRoad(road, snapshot) {
   if (!layout) {
     return;
   }
-  const classification = snapshot ? snapshot.classification : 'UNKNOWN';
+  const classification = snapshot ? snapshot.classification : 'NO_DATA';
   const color = STATUS_COLORS[classification] || STATUS_COLORS.UNKNOWN;
   const baseWidth = layout.width || 12;
 
@@ -170,7 +172,7 @@ function strokePath(points, color, width) {
 }
 
 function drawVehicles(road, snapshot) {
-  if (!snapshot) {
+  if (!snapshot || snapshot.classification === 'NO_DATA') {
     return;
   }
   // Use cars_5s if available, otherwise fall back to cars_60s for stale data

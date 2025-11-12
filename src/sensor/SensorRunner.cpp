@@ -49,13 +49,22 @@ void SensorRunner::stop() {
 
 void SensorRunner::loop_(int idx) {
     std::uniform_int_distribution<std::size_t> road_dist(0, roads_.size() - 1);
-    std::uniform_int_distribution<int> cars_dist(0, 50);
-    std::uniform_real_distribution<double> speed_dist(5.0, 70.0);
+    std::uniform_int_distribution<int> cars_base(0, 8);
+    std::uniform_int_distribution<int> cars_spike(12, 24);
+    std::uniform_real_distribution<double> speed_base(40.0, 70.0);
+    std::uniform_real_distribution<double> speed_slow(12.0, 26.0);
+    std::bernoulli_distribution congestion_burst(0.12);
     while (running_.load()) {
         auto road = roads_[road_dist(rng_)];
         auto report = makeReport_(road);
-        report.vehicle_count = cars_dist(rng_);
-        report.avg_speed_kmh = speed_dist(rng_);
+        int cars = cars_base(rng_);
+        double speed = speed_base(rng_);
+        if (congestion_burst(rng_)) {
+            cars += cars_spike(rng_);
+            speed = speed_slow(rng_);
+        }
+        report.vehicle_count = cars;
+        report.avg_speed_kmh = speed;
         auto body = report.toJson();
         body["sensor_id"] = id_ + "-" + std::to_string(idx);
         

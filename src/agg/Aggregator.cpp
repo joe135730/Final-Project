@@ -72,16 +72,26 @@ void Aggregator::recompute(long now_ms) {
             snap.ewma_speed_kmh = window.ewma;
             snap.classification = classify(snap.avg_speed_kmh, snap.cars_5s);
             last_[road] = snap;
-        } else if (last_.find(road) != last_.end()) {
-            // No data in windows, but we have a previous snapshot - preserve it
-            auto& existing = last_[road];
-            // Clear STALE status if it exists - show last known good state instead
-            if (existing.classification == "STALE") {
-                // Reclassify based on last known values to restore normal status
-                existing.classification = classify(existing.avg_speed_kmh, existing.cars_5s);
+        } else {
+            auto it = last_.find(road);
+            if (it == last_.end()) {
+                RoadSnapshot snap;
+                snap.road = road;
+                snap.last_report_ms = 0;
+                snap.cars_5s = 0;
+                snap.cars_60s = 0;
+                snap.avg_speed_kmh = 0.0;
+                snap.ewma_speed_kmh = 0.0;
+                snap.classification = "NO_DATA";
+                last_[road] = snap;
+            } else {
+                auto& existing = it->second;
+                existing.cars_5s = 0;
+                existing.cars_60s = 0;
+                existing.avg_speed_kmh = 0.0;
+                existing.ewma_speed_kmh = 0.0;
+                existing.classification = "NO_DATA";
             }
-            // Keep the existing values - don't update
-            // This allows followers to continue showing last known good state without STALE label
         }
         // If no data and no previous snapshot, do nothing (road will not appear in summary)
     }
@@ -109,7 +119,9 @@ std::vector<RoadSnapshot> Aggregator::summary(size_t topN) const {
         auto rank = [](const std::string& cls) {
             if (cls == "CONGESTED") return 0;
             if (cls == "MODERATE") return 1;
-            return 2;
+            if (cls == "SMOOTH") return 2;
+            if (cls == "NO_DATA") return 3;
+            return 4;
         };
         return rank(a.classification) < rank(b.classification);
     });
