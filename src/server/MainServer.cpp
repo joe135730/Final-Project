@@ -1,5 +1,6 @@
 #include "server/MainServer.h"
 
+#include <algorithm>
 #include <chrono>
 #include <cctype>
 #include <fstream>
@@ -133,8 +134,29 @@ void MainServer::serveHttp_() {
                 HttpClient cli(node->host, node->http_port);
                 nlohmann::json resp;
                 if (!cli.postJson("/ingest", forward, &resp)) {
-                    res.status = 502;
-                    res.set_content(R"({"error":"leader unavailable"})", "application/json");
+                    // Leader is unavailable - check if we can promote to leader
+                    if (isFollowerFor(shardId)) {
+                        Logger::instance().info("Leader " + leaderId + " unavailable for shard " + 
+                                                std::to_string(shardId) + ", promoting " + selfId_ + " to leader");
+                        promoteToLeaderFor(shardId);
+                        // Now process as leader
+                        auto entry = makeEntry_(report, shardId);
+                        long idx = repl_.appendAndReplicate(entry);
+                        nlohmann::json response{
+                            {"status", "ok"},
+                            {"index", idx},
+                            {"term", repl_.term()},
+                            {"promoted", true}
+                        };
+                        res.set_header("Access-Control-Allow-Origin", "*");
+                        res.status = 200;
+                        res.set_content(response.dump(), "application/json");
+                        return;
+                    } else {
+                        res.status = 502;
+                        res.set_content(R"({"error":"leader unavailable"})", "application/json");
+                        return;
+                    }
                 } else {
                     res.status = 200;
                     res.set_content(resp.dump(), "application/json");
@@ -239,7 +261,45 @@ OpLogEntry MainServer::makeEntry_(const TrafficReport& r, int shardId) {
 bool MainServer::isLeaderFor(int shardId) const {
     auto it = cfg_.shards.find(shardId);
     if (it == cfg_.shards.end()) return false;
-    return it->second.leader == selfId_ && asLeader_;
+    // Check if we're the configured leader and in leader mode
+    if (it->second.leader == selfId_ && asLeader_) {
+        return true;
+    }
+    // Check if we've been promoted to leader and are a follower for this shard
+    if (asLeader_ && isFollowerFor(shardId)) {
+        return true;
+    }
+    return false;
+}
+
+bool MainServer::isFollowerFor(int shardId) const {
+    auto it = cfg_.shards.find(shardId);
+    if (it == cfg_.shards.end()) return false;
+    const auto& followers = it->second.followers;
+    return std::find(followers.begin(), followers.end(), selfId_) != followers.end();
+}
+
+void MainServer::promoteToLeaderFor(int shardId) {
+    // Check if we're already leader
+    if (isLeaderFor(shardId)) {
+        return;
+    }
+    
+    // Check if we're a follower for this shard
+    if (!isFollowerFor(shardId)) {
+        return;
+    }
+    
+    // Promote to leader mode if not already
+    if (!asLeader_) {
+        asLeader_ = true;
+        // Switch replication from follower to leader
+        repl_.stop();
+        repl_.startLeader([this](const OpLogEntry& e) {
+            agg_.add(e.payload);
+        });
+        Logger::instance().info("Promoted " + selfId_ + " to leader mode");
+    }
 }
 
 bool MainServer::serveStaticFile_(const std::string& relPath, httplib::Response& res) const {

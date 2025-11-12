@@ -2,6 +2,7 @@ const STATUS_COLORS = {
   CONGESTED: '#e74c3c',
   MODERATE: '#f1c40f',
   SMOOTH: '#2ecc71',
+  STALE: '#64748b',
   UNKNOWN: '#64748b'
 };
 
@@ -9,7 +10,8 @@ const CLASS_PRIORITY = {
   CONGESTED: 0,
   MODERATE: 1,
   SMOOTH: 2,
-  UNKNOWN: 3
+  STALE: 3,
+  UNKNOWN: 4
 };
 
 const ROAD_LAYOUT = {
@@ -160,7 +162,12 @@ function strokePath(points, color, width) {
 }
 
 function drawVehicles(road, snapshot) {
-  if (!snapshot || snapshot.cars_5s <= 0) {
+  if (!snapshot) {
+    return;
+  }
+  // Use cars_5s if available, otherwise fall back to cars_60s for stale data
+  const vehicleCount = snapshot.cars_5s > 0 ? snapshot.cars_5s : snapshot.cars_60s;
+  if (vehicleCount <= 0) {
     return;
   }
   const layout = ROAD_LAYOUT[road];
@@ -168,8 +175,11 @@ function drawVehicles(road, snapshot) {
     return;
   }
   const segments = layout.points.length - 1;
-  const vehicleCount = Math.max(1, Math.min(5, Math.round(snapshot.cars_5s / 5)));
-  for (let i = 0; i < vehicleCount; i += 1) {
+  // Scale vehicle count for visualization (use cars_60s scale for stale data)
+  const displayCount = snapshot.cars_5s > 0 
+    ? Math.max(1, Math.min(5, Math.round(snapshot.cars_5s / 5)))
+    : Math.max(1, Math.min(5, Math.round(snapshot.cars_60s / 12))); // Scale 60s data differently
+  for (let i = 0; i < displayCount; i += 1) {
     const segIdx = Math.floor(Math.random() * segments);
     const start = layout.points[segIdx];
     const end = layout.points[segIdx + 1];
@@ -230,6 +240,8 @@ function formatClassification(classification) {
       return 'Moderate';
     case 'SMOOTH':
       return 'Smooth';
+    case 'STALE':
+      return 'Stale (No Recent Data)';
     default:
       return 'No Data';
   }

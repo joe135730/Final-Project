@@ -20,6 +20,8 @@ private:
     void aggLoop_();            // recompute every 1s
     OpLogEntry makeEntry_(const TrafficReport& r, int shardId);
     bool isLeaderFor(int shardId) const;
+    bool isFollowerFor(int shardId) const;
+    void promoteToLeaderFor(int shardId);
     bool serveStaticFile_(const std::string& relPath, httplib::Response& res) const;
     static std::string guessMime_(const std::string& path);
 

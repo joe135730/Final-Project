@@ -31,23 +31,38 @@ void Aggregator::recompute(long now_ms) {
             window.w60s.pop_front();
         }
 
-        RoadSnapshot snap;
-        snap.road = road;
-        snap.last_report_ms = window.last_ts;
-        snap.cars_5s = 0;
-        snap.cars_60s = 0;
-        double sum_speed = 0.0;
-        for (const auto& r : window.w5s) {
-            snap.cars_5s += r.vehicle_count;
+        // Only update snapshot if we have data in windows, otherwise preserve last known good snapshot
+        bool hasData = !window.w5s.empty() || !window.w60s.empty();
+        if (hasData) {
+            // We have data, calculate and update snapshot
+            RoadSnapshot snap;
+            snap.road = road;
+            snap.last_report_ms = window.last_ts;
+            snap.cars_5s = 0;
+            snap.cars_60s = 0;
+            double sum_speed = 0.0;
+            for (const auto& r : window.w5s) {
+                snap.cars_5s += r.vehicle_count;
+            }
+            for (const auto& r : window.w60s) {
+                snap.cars_60s += r.vehicle_count;
+                sum_speed += r.avg_speed_kmh;
+            }
+            snap.avg_speed_kmh = window.w60s.empty() ? 0.0 : sum_speed / window.w60s.size();
+            snap.ewma_speed_kmh = window.ewma;
+            snap.classification = classify(snap.avg_speed_kmh, snap.cars_5s);
+            last_[road] = snap;
+        } else if (last_.find(road) != last_.end()) {
+            // No data in windows, but we have a previous snapshot - preserve it
+            auto& existing = last_[road];
+            long stale_threshold = 120000; // 2 minutes
+            if (now_ms - existing.last_report_ms > stale_threshold) {
+                // Mark as stale by setting classification to indicate no recent data
+                existing.classification = "STALE";
+            }
+            // Keep the existing values (cars_5s, cars_60s, etc.) - don't update
         }
-        for (const auto& r : window.w60s) {
-            snap.cars_60s += r.vehicle_count;
-            sum_speed += r.avg_speed_kmh;
-        }
-        snap.avg_speed_kmh = window.w60s.empty() ? 0.0 : sum_speed / window.w60s.size();
-        snap.ewma_speed_kmh = window.ewma;
-        snap.classification = classify(snap.avg_speed_kmh, snap.cars_5s);
-        last_[road] = snap;
+        // If no data and no previous snapshot, do nothing (road will not appear in summary)
     }
 }
 
