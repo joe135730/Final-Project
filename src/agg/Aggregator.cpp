@@ -34,7 +34,7 @@ void Aggregator::recompute(long now_ms) {
         // Only update snapshot if we have data in windows, otherwise preserve last known good snapshot
         bool hasData = !window.w5s.empty() || !window.w60s.empty();
         if (hasData) {
-            // We have data, calculate and update snapshot
+            // We have data, calculate and update snapshot (this clears any STALE status)
             RoadSnapshot snap;
             snap.road = road;
             snap.last_report_ms = window.last_ts;
@@ -55,12 +55,13 @@ void Aggregator::recompute(long now_ms) {
         } else if (last_.find(road) != last_.end()) {
             // No data in windows, but we have a previous snapshot - preserve it
             auto& existing = last_[road];
-            long stale_threshold = 120000; // 2 minutes
-            if (now_ms - existing.last_report_ms > stale_threshold) {
-                // Mark as stale by setting classification to indicate no recent data
-                existing.classification = "STALE";
+            // Clear STALE status if it exists - show last known good state instead
+            if (existing.classification == "STALE") {
+                // Reclassify based on last known values to restore normal status
+                existing.classification = classify(existing.avg_speed_kmh, existing.cars_5s);
             }
-            // Keep the existing values (cars_5s, cars_60s, etc.) - don't update
+            // Keep the existing values - don't update
+            // This allows followers to continue showing last known good state without STALE label
         }
         // If no data and no previous snapshot, do nothing (road will not appear in summary)
     }
