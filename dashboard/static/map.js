@@ -135,47 +135,13 @@ function drawRoad(road, snapshot) {
   const color = STATUS_COLORS[classification] || STATUS_COLORS.UNKNOWN;
   const baseWidth = layout.width || 12;
 
-  // Draw road base/shadow
-  strokePath(layout.points, 'rgba(15, 23, 42, 0.9)', baseWidth + 8);
-  strokePath(layout.points, 'rgba(15, 23, 42, 0.7)', baseWidth + 4);
-  
-  // Draw main road
+  strokePath(layout.points, 'rgba(15, 23, 42, 0.85)', baseWidth + 6);
   strokePath(layout.points, color, baseWidth);
-  
-  // Draw center line for major roads
-  if (baseWidth >= 14) {
-    ctx.setLineDash([8, 4]);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(layout.points[0][0], layout.points[0][1]);
-    for (let i = 1; i < layout.points.length; i += 1) {
-      ctx.lineTo(layout.points[i][0], layout.points[i][1]);
-    }
-    ctx.stroke();
-    ctx.setLineDash([]);
-  }
 
   const label = layout.label || prettifyRoadName(road);
   const labelPos = layout.labelPos || layout.points[Math.floor(layout.points.length / 2)];
-  
-  // Draw label with background
-  ctx.font = 'bold 13px "Segoe UI", sans-serif';
-  const metrics = ctx.measureText(label);
-  const labelWidth = metrics.width;
-  const labelHeight = 18;
-  
-  // Label background
-  ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-  ctx.fillRect(labelPos[0] - 6, labelPos[1] - 14, labelWidth + 12, labelHeight);
-  
-  // Label border
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
-  ctx.strokeRect(labelPos[0] - 6, labelPos[1] - 14, labelWidth + 12, labelHeight);
-  
-  // Label text
   ctx.fillStyle = '#f8fafc';
+  ctx.font = '14px "Segoe UI", sans-serif';
   ctx.fillText(label, labelPos[0], labelPos[1]);
 }
 
@@ -183,9 +149,6 @@ function strokePath(points, color, width) {
   if (!points || points.length < 2) {
     return;
   }
-  // Draw shadow/glow effect
-  ctx.shadowColor = color;
-  ctx.shadowBlur = width * 1.5;
   ctx.beginPath();
   ctx.moveTo(points[0][0], points[0][1]);
   for (let i = 1; i < points.length; i += 1) {
@@ -195,32 +158,6 @@ function strokePath(points, color, width) {
   ctx.lineWidth = width;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-  
-  // Draw main road with gradient
-  const gradient = ctx.createLinearGradient(
-    points[0][0], points[0][1],
-    points[points.length - 1][0], points[points.length - 1][1]
-  );
-  // Convert hex to rgba for gradient
-  const hexToRgba = (hex, alpha) => {
-    const r = parseInt(hex.slice(1, 3), 16);
-    const g = parseInt(hex.slice(3, 5), 16);
-    const b = parseInt(hex.slice(5, 7), 16);
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-  };
-  gradient.addColorStop(0, color);
-  gradient.addColorStop(0.5, hexToRgba(color, 0.8));
-  gradient.addColorStop(1, color);
-  
-  ctx.beginPath();
-  ctx.moveTo(points[0][0], points[0][1]);
-  for (let i = 1; i < points.length; i += 1) {
-    ctx.lineTo(points[i][0], points[i][1]);
-  }
-  ctx.strokeStyle = gradient;
-  ctx.lineWidth = width * 0.9;
   ctx.stroke();
 }
 
@@ -242,9 +179,6 @@ function drawVehicles(road, snapshot) {
   const displayCount = snapshot.cars_5s > 0 
     ? Math.max(1, Math.min(5, Math.round(snapshot.cars_5s / 5)))
     : Math.max(1, Math.min(5, Math.round(snapshot.cars_60s / 12))); // Scale 60s data differently
-  
-  // Store vehicle positions for animation (simple approach)
-  const vehiclePositions = [];
   for (let i = 0; i < displayCount; i += 1) {
     const segIdx = Math.floor(Math.random() * segments);
     const start = layout.points[segIdx];
@@ -252,37 +186,11 @@ function drawVehicles(road, snapshot) {
     const t = Math.random();
     const x = start[0] + (end[0] - start[0]) * t;
     const y = start[1] + (end[1] - start[1]) * t;
-    vehiclePositions.push({ x, y });
-  }
-  
-  // Draw vehicles with glow effect
-  vehiclePositions.forEach((pos) => {
-    // Outer glow
-    const gradient = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, 8);
-    gradient.addColorStop(0, '#38bdf8');
-    gradient.addColorStop(0.5, '#38bdf8AA');
-    gradient.addColorStop(1, '#38bdf800');
-    
-    ctx.beginPath();
-    ctx.fillStyle = gradient;
-    ctx.arc(pos.x, pos.y, 8, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Main vehicle
     ctx.beginPath();
     ctx.fillStyle = '#38bdf8';
-    ctx.shadowColor = '#38bdf8';
-    ctx.shadowBlur = 6;
-    ctx.arc(pos.x, pos.y, 4, 0, Math.PI * 2);
+    ctx.arc(x, y, 5, 0, Math.PI * 2);
     ctx.fill();
-    ctx.shadowBlur = 0;
-    
-    // Highlight
-    ctx.beginPath();
-    ctx.fillStyle = '#ffffff';
-    ctx.arc(pos.x - 1, pos.y - 1, 1.5, 0, Math.PI * 2);
-    ctx.fill();
-  });
+  }
 }
 
 function updateTable() {
