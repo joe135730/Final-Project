@@ -1,6 +1,7 @@
 #pragma once
 #include <atomic>
 #include <thread>
+#include <string>
 
 #include "shard/ShardRouter.h"
 #include "repl/Replication.h"
@@ -11,6 +12,9 @@
 
 class MainServer {
 public:
+    MainServer(const std::string& selfId, const ClusterConfig& cfg,
+               const std::string& host, int httpPort, bool asLeader,
+               std::string roadsPath);
     MainServer(const std::string& selfId, const ClusterConfig& cfg,
                const std::string& host, int httpPort, bool asLeader);
     void start();
@@ -39,4 +43,5 @@ private:
     std::thread aggThread_;
     std::thread failoverThread_;
     std::string staticRoot_{"dashboard"};
+    std::string roadsPath_;
 };

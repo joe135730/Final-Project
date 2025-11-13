@@ -11,6 +11,7 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
+#include <utility>
 
 #include <nlohmann/json.hpp>
 
@@ -23,14 +24,23 @@ MainServer::MainServer(const std::string& selfId,
                        const ClusterConfig& cfg,
                        const std::string& host,
                        int httpPort,
-                       bool asLeader)
+                       bool asLeader,
+                       std::string roadsPath)
     : selfId_(selfId),
       cfg_(cfg),
       asLeader_(asLeader),
       host_(host),
       httpPort_(httpPort),
       router_(cfg),
-      repl_(selfId, cfg) {}
+      repl_(selfId, cfg),
+      roadsPath_(std::move(roadsPath)) {}
+
+MainServer::MainServer(const std::string& selfId,
+                       const ClusterConfig& cfg,
+                       const std::string& host,
+                       int httpPort,
+                       bool asLeader)
+    : MainServer(selfId, cfg, host, httpPort, asLeader, "config/roads.json") {}
 
 namespace {
 bool hasLeadership(const ClusterConfig& cfg, const std::string& nodeId) {
