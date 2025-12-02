@@ -382,13 +382,13 @@ void MainServer::aggLoop_() {
 }
 
 void MainServer::failoverLoop_() {
-    // Check every 5 seconds for leader failures
+    // Check every 2 seconds for leader failures (more responsive)
     while (running_.load()) {
-        std::this_thread::sleep_for(std::chrono::seconds(5));
+        std::this_thread::sleep_for(std::chrono::seconds(2));
         
         if (!running_.load()) break;
         
-        // Check each shard where we're a follower
+        // Check each shard in the cluster
         for (const auto& shardPair : cfg_.shards) {
             int shardId = shardPair.first;
             const auto& shard = shardPair.second;
@@ -403,10 +403,21 @@ void MainServer::failoverLoop_() {
                 continue;
             }
             
-            // Check if the configured leader is reachable
+            // Get the configured leader for this shard
             const std::string& leaderId = shard.leader;
+            
+            // Skip if we're the configured leader (shouldn't happen, but safety check)
+            if (leaderId == selfId_) {
+                continue;
+            }
+            
             auto leaderNode = cfg_.findNode(leaderId);
             if (!leaderNode) {
+                // Leader node not found in config - promote ourselves
+                Logger::instance().info("Leader " + leaderId + " for shard " + 
+                                       std::to_string(shardId) + " not found in config, promoting " + 
+                                       selfId_ + " to leader");
+                promoteToLeaderFor(shardId);
                 continue;
             }
             
@@ -415,11 +426,12 @@ void MainServer::failoverLoop_() {
             try {
                 HttpClient cli(leaderNode->host, leaderNode->http_port);
                 nlohmann::json resp;
-                if (cli.getJson("/status", &resp, 2000)) {
+                if (cli.getJson("/status", &resp, 1000)) {  // Reduced timeout to 1s for faster detection
                     leaderAlive = true;
                 }
             } catch (const std::exception& ex) {
-                // Leader is down
+                // Leader is down - connection refused or timeout
+                leaderAlive = false;
             }
             
             // If leader is down and we're a follower, promote ourselves
@@ -472,18 +484,21 @@ void MainServer::promoteToLeaderFor(int shardId) {
     
     // Check if we're a follower for this shard
     if (!isFollowerFor(shardId)) {
+        Logger::instance().warn("Cannot promote " + selfId_ + " for shard " + std::to_string(shardId) + 
+                               ": not a follower for this shard");
         return;
     }
     
-    // Before promoting, try to sync missing data from the original leader
     const auto& leaderId = cfg_.shards.at(shardId).leader;
+    
+    // Before promoting, try to sync missing data from the original leader
     auto leaderNode = cfg_.findNode(leaderId);
     if (leaderNode && leaderId != selfId_) {
-        // Try to sync data from the original leader
+        // Try to sync data from the original leader (if it's still reachable)
         try {
             HttpClient cli(leaderNode->host, leaderNode->http_port);
             nlohmann::json syncData;
-            if (cli.getJson("/sync", &syncData, 2000)) {
+            if (cli.getJson("/sync", &syncData, 1000)) {  // Reduced timeout
                 // Update aggregator with synced data
                 if (syncData.is_array()) {
                     int syncedCount = 0;
@@ -502,11 +517,14 @@ void MainServer::promoteToLeaderFor(int shardId) {
                             Logger::instance().warn("Failed to sync road snapshot: " + std::string(ex.what()));
                         }
                     }
-                    Logger::instance().info("Synced " + std::to_string(syncedCount) + " roads from leader " + leaderId);
+                    if (syncedCount > 0) {
+                        Logger::instance().info("Synced " + std::to_string(syncedCount) + " roads from leader " + leaderId);
+                    }
                 }
             }
         } catch (const std::exception& ex) {
-            Logger::instance().warn("Failed to sync from leader " + leaderId + ": " + ex.what());
+            // Leader is down, proceed with promotion without sync
+            Logger::instance().info("Could not sync from leader " + leaderId + " (already down), proceeding with promotion");
         }
     }
     
@@ -518,7 +536,7 @@ void MainServer::promoteToLeaderFor(int shardId) {
         repl_.startLeader([this](const OpLogEntry& e) {
             agg_.add(e.payload);
         });
-        Logger::instance().info("Promoted " + selfId_ + " to leader mode");
+        Logger::instance().info("Promoted " + selfId_ + " to leader mode (now leader for all shards where we are a follower)");
     }
 }
 
